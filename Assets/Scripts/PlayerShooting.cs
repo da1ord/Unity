@@ -26,6 +26,7 @@ public class PlayerShooting : MonoBehaviour
 	Light gunLight_;
 
 	LayerMask shootableMask_;
+	PlayerController playerController_;
 
 	// Init function
 	void Awake() 
@@ -35,6 +36,7 @@ public class PlayerShooting : MonoBehaviour
 		gunAudio_ = GetComponent<AudioSource>();
 
 		shootableMask_ = LayerMask.GetMask( "Shootable" );
+		playerController_ = transform.root.GetComponent<PlayerController>();
 	}
 
 	void Update() 
@@ -99,14 +101,15 @@ public class PlayerShooting : MonoBehaviour
 
 		// Set distraction point of each enemy
 		// TODO: use observer pattern
-		EnemyController[] allEnemies = GameObject.FindObjectsOfType<EnemyController>();
-		foreach( EnemyController enemy in allEnemies )
-		{
-			if( ( enemy.transform.position - transform.position ).magnitude < gunAudio_.minDistance )
-			{
-				enemy.distractionPoint_ = transform.position;
-			}
-		}
+//		EnemyController[] allEnemies = GameObject.FindObjectsOfType<EnemyController>();
+//		foreach( EnemyController enemy in allEnemies )
+//		{
+//			if( ( enemy.transform.position - transform.position ).magnitude < gunAudio_.minDistance )
+//			{
+//				enemy.SetDistractionPoint( transform.position );
+//			}
+//		}
+		playerController_.SetNoiseLevel( gunAudio_.minDistance );
 	}
 
 	void DisableEffects()

@@ -38,6 +38,8 @@ public class EnemyShooting : MonoBehaviour
 
 		timer_ = 0.0f;
 
+		damagePerShot_ = 0;
+
 //		shootableMask_ = LayerMask.GetMask( "Shootable" );
 	}
 

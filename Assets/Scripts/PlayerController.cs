@@ -21,6 +21,8 @@ public class PlayerController : MonoBehaviour
 
 	public Image crosshair_;
 
+	public Vector3 startPosition_ = new Vector3( 0.1f, 0.9f, 0.1f );
+
 	// Pivot point along which the guns rotate (for looking around X-axis)
 	GameObject gunsPivot_;
 	// Player RigidBody instance
@@ -45,6 +47,7 @@ public class PlayerController : MonoBehaviour
 	bool isMoving_ = false;
 	Vector3 position_;
 	Vector3 gunPosition_;
+	float noiseLevel_ = 0.0f;
 
 	// Init function
 	void Start()
@@ -58,7 +61,7 @@ public class PlayerController : MonoBehaviour
 		capsule_ = GetComponentInChildren<CapsuleCollider>();
 
 		// Avoid playing of walk sound
-		rb_.MovePosition( new Vector3( 0.1f, 0.9f, 0.1f ) );
+		rb_.MovePosition( startPosition_ );
 		position_.x = rb_.position.x;
 		position_.z = rb_.position.z;
 
@@ -128,14 +131,15 @@ public class PlayerController : MonoBehaviour
 			}
 			// Set distraction point of each enemy
 			// TODO: use observer pattern
-			EnemyController[] allEnemies = GameObject.FindObjectsOfType<EnemyController>();
-			foreach( EnemyController enemy in allEnemies )
-			{
-				if( ( enemy.transform.position - transform.position ).magnitude < walkAudio_.minDistance )
-				{
-					enemy.distractionPoint_ = transform.position;
-				}
-			}
+//			EnemyController[] allEnemies = GameObject.FindObjectsOfType<EnemyController>();
+//			foreach( EnemyController enemy in allEnemies )
+//			{
+//				if( ( enemy.transform.position - transform.position ).magnitude < walkAudio_.minDistance )
+//				{
+//					enemy.SetDistractionPoint( transform.position );
+//				}
+//			}
+			noiseLevel_ = walkAudio_.minDistance;
 		}
 		// Player is not moving
 		else
@@ -158,13 +162,11 @@ public class PlayerController : MonoBehaviour
 			if( Cursor.lockState == CursorLockMode.Locked )
 			{
 				Cursor.visible = true;
-				Debug.Log("unlock");
 				Cursor.lockState = CursorLockMode.None;
 			} 
 			else 
 			{
 				Cursor.visible = false;
-				Debug.Log("lock");
 				Cursor.lockState = CursorLockMode.Locked;
 			}
 		}
@@ -251,6 +253,16 @@ public class PlayerController : MonoBehaviour
 		{
 			rb_.AddForce( new Vector3 ( 0.0f, 5.0f, 0.0f ), ForceMode.Impulse );
 		}
+	}
+
+	public void SetNoiseLevel( float level )
+	{
+		noiseLevel_ = level;
+	}
+
+	public float GetNoiseLevel()
+	{
+		return noiseLevel_;
 	}
 
 	void OnTriggerEnter( Collider other )
