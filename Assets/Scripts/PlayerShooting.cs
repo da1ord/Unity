@@ -81,12 +81,17 @@ public class PlayerShooting : MonoBehaviour
 		gunLine_.SetPosition( 0, transform.position );
 
 		// Hit enemy
-		if( Physics.Raycast( shootRay_, out shootHit_, range_, shootableMask_ ) )
+		// TODO: Remove mask to test raycast against environment?
+//		if( Physics.Raycast( shootRay_, out shootHit_, range_, shootableMask_ ) )
+		if( Physics.Raycast( shootRay_, out shootHit_, range_ ) )
 		{
-			EnemyHealth enemyHealth = shootHit_.collider.GetComponent<EnemyHealth>();
-			if( enemyHealth != null )
+			if( shootHit_.collider.tag == "Enemy" )
 			{
-				enemyHealth.TakeDamage( damagePerShot_ );
+				EnemyHealth enemyHealth = shootHit_.collider.GetComponent<EnemyHealth>();
+				if( enemyHealth != null )
+				{
+					enemyHealth.TakeDamage( damagePerShot_ );
+				}
 			}
 
 			gunLine_.startColor = Color.green;
