@@ -12,7 +12,7 @@ public class EnemyController : MonoBehaviour {
 	PlayerController playerController_;
 	bool playerDetected_ = false;
 
-	enum EnemyState { Patrolling, Distracted, Following, Shooting, Seeking };
+	enum EnemyState { Patrolling, Distracted, Seeking, Following, Shooting };
 	EnemyState enemyState_ = EnemyState.Patrolling;
 	EnemyState lastEnemyState_ = EnemyState.Patrolling;
 
@@ -25,6 +25,10 @@ public class EnemyController : MonoBehaviour {
 
 	// TODO: Get from gun
 	float gunRange_ = 10.0f;
+	float minShootRange_;
+	float maxShootRange_;
+
+	float seekingTimer_ = 5.0f;
 
 	Vector3[] path_ = new []{ new Vector3( -20.0f, 1.0f, 20.0f ), 
 							  new Vector3( -20.0f, 1.0f, -20.0f ), 
@@ -35,7 +39,7 @@ public class EnemyController : MonoBehaviour {
 	int nextDestPointId_ = 0;
 
 	static Vector3 NO_DISTRACTION_SET = new Vector3( 1000.0f, 1000.0f, 1000.0f );
-	public Vector3 distractionPoint_ = NO_DISTRACTION_SET;
+	Vector3 distractionPoint_;
 
 	void Awake()  // Start
 	{
@@ -45,13 +49,18 @@ public class EnemyController : MonoBehaviour {
 		enemyShooting_ = gameObject.GetComponentInChildren<EnemyShooting>();
 		playerController_ = GameObject.FindGameObjectWithTag( "Player" ).GetComponent<PlayerController>();
 
+		minShootRange_ = gunRange_ - 2;
+		maxShootRange_ = gunRange_ + 2;
+		distractionPoint_ = NO_DISTRACTION_SET;
+
 		GoToNextPoint();
+//		Debug.Log( "Start" );
 	}
 
 	void Update()
 	{
-		Debug.Log( distractionPoint_ );
-		Debug.Log( enemyState_ );
+//		Debug.Log( enemyState_ );
+//		Debug.Log( distractionPoint_ );
 
 		// Enemy is alive
 		if( enemyHealth_.health_ > 0 )
@@ -80,63 +89,104 @@ public class EnemyController : MonoBehaviour {
 			Vector3 playerDirection = player_.position - transform.position;
 			float playerDistance = playerDirection.magnitude;
 
-			//if( playerDistance >= gunRange_ )
-			{
-				nav_.enabled = true;
-			}
+			nav_.enabled = true;
 			playerDetected_ = false;
 
+			// Player is in sight of enemy
 			if( playerDistance < sightDistance_ )
 			{
 				float angleToPlayer = Vector3.Angle( playerDirection, transform.forward );
 				if( angleToPlayer < fovYHalf_ )
 				{
-					if( Physics.Raycast( transform.position, playerDirection, sightDistance_, LayerMask.GetMask( "Player" ) ) )
+					// Player is seen by enemy (no environment in a way)
+//					if( Physics.Raycast( transform.position, playerDirection, sightDistance_, LayerMask.GetMask( "Player" ) ) )
+					if( !Physics.Raycast( transform.position, playerDirection, playerDistance, LayerMask.GetMask( "Environment" ) ) )
 					{
+						Debug.Log( distractionPoint_ );
 						playerDetected_ = true;
 						enemyState_ = EnemyState.Following;
 
+						distractionPoint_ = player_.transform.position;
+
 						// TODO: LookAt player? no need to check for the next angle
-						
-						if( playerDistance < gunRange_ )
+
+						// Check if Player is in shooting range of enemy
+						if( playerDistance < maxShootRange_ )
 						{
 							enemyShooting_.Shoot();
 							Debug.DrawRay( transform.position, transform.forward * sightDistance_, Color.green );
-						
-							if( playerDistance < gunRange_ - 3 )
+
+							// Check if Player is too close to enemy
+							if( playerDistance < minShootRange_ )
 							{
 								nav_.enabled = false;
 							}
-//							if( angleToPlayer < 10.0f )
-//							{
-//								nav_.enabled = false;
-//								enemyShooting_.Shoot();
-//								Debug.DrawRay( transform.position, transform.forward * sightDistance_, Color.green );
-//							}
+						}
+					}
+					// Enemy just lost the Player
+					else if( lastEnemyState_ > EnemyState.Seeking ) // Following, Shooting
+					{
+						Debug.Log( "Player lost" );
+						//enemyState_ = EnemyState.Seeking;
+						/* Routine */
+						if( distractionPoint_ == NO_DISTRACTION_SET )
+						{
+							enemyState_ = EnemyState.Seeking;
+						}
+						else
+						{
+							enemyState_ = EnemyState.Distracted;
+						}
+					}
+					// Player is not seen by enemy
+					else
+					{
+						if( enemyState_ == EnemyState.Seeking )
+						{
+						}
+						else
+						{
+							/* Routine */
+							if( distractionPoint_ == NO_DISTRACTION_SET )
+							{
+								enemyState_ = EnemyState.Patrolling;
+							}
+							else
+							{
+								enemyState_ = EnemyState.Distracted;
+							}
 						}
 					}
 				}
-//				else
-//				{
-//					playerDetected_ = false;
-//					if( enemyState_ != EnemyState.Distracted )
-//					{
-//						enemyState_ = EnemyState.Patrolling;
-//					}
-//				}
-			}
-			// Player is not in sight
-//			else
-			// TODO: When the Raycast result is false -> detected == false -> insta seeking state?
-			if( playerDetected_ == false )
-			{
-				// Just lost player from sight
-				if( lastEnemyState_ == EnemyState.Following )
+				else
 				{
-					// Check if a distraction point was set
-					if( distractionPoint_ != NO_DISTRACTION_SET )
+					if( enemyState_ == EnemyState.Seeking )
 					{
-						enemyState_ = EnemyState.Seeking;
+					}
+					else
+					{/* Routine */
+						if( distractionPoint_ == NO_DISTRACTION_SET )
+						{
+							enemyState_ = EnemyState.Patrolling;
+						}
+						else
+						{
+							enemyState_ = EnemyState.Distracted;
+						}
+					}
+				}
+			}
+			else
+			{
+				if( enemyState_ == EnemyState.Seeking )
+				{
+				}
+				else
+				{
+					/* Routine */
+					if( distractionPoint_ == NO_DISTRACTION_SET )
+					{
+						enemyState_ = EnemyState.Patrolling;
 					}
 					else
 					{
@@ -145,12 +195,19 @@ public class EnemyController : MonoBehaviour {
 				}
 			}
 
-			if( playerController_.GetNoiseLevel() > playerDistance )
+			if( enemyState_ < EnemyState.Following ) // Patrolling, Distracted, Seeking
 			{
-				enemyState_ = EnemyState.Distracted;
-				distractionPoint_ = player_.transform.position;
+				if( playerController_.GetNoiseLevel() > playerDistance )
+				{
+					enemyState_ = EnemyState.Distracted;
+					if( distractionPoint_ == NO_DISTRACTION_SET )
+					{
+						distractionPoint_ = player_.transform.position;
+					}
+				}
 			}
 
+//			Debug.Log( enemyState_ );
 			switch( enemyState_ )
 			{
 				case EnemyState.Patrolling:
@@ -185,9 +242,28 @@ public class EnemyController : MonoBehaviour {
 				}
 				case EnemyState.Seeking:
 				{
+					// Seeking in progress
+					if( seekingTimer_ > 0.0f )
+					{
+						seekingTimer_ -= Time.deltaTime;
+						// Seek for Player - rotate around
+						//float randomDir = Random.Range( -30.0f, 30.0f );
+						transform.Rotate( transform.up, 2.0f );
+					}
+					// Seeking done
+					else
+					{
+						seekingTimer_ = 5.0f;
+						enemyState_ = EnemyState.Patrolling;
+
+						GoToActualPoint();
+						lastEnemyState_ = enemyState_;
+						return;
+					}
+
 					// Set walk speed
-					nav_.speed = 20.5f;//4.5f
-					nav_.SetDestination( new Vector3( 25.0f, 1.0f, 25.0f ) );
+//					nav_.speed = 20.5f;//4.5f
+//					nav_.SetDestination( new Vector3( 25.0f, 1.0f, 25.0f ) );
 					// Rotate for a while then move to patrolling state
 					break;
 				}
@@ -197,26 +273,27 @@ public class EnemyController : MonoBehaviour {
 
 			// TODO: Only patrolling state?
 			// Check destination remaining distance
-			if( nav_.remainingDistance < 1.5f && enemyState_ == EnemyState.Patrolling )
+			if( nav_.remainingDistance < 1.5f && ( enemyState_ == EnemyState.Patrolling || enemyState_ == EnemyState.Distracted ) )
 			{
-//				// If close to destination and not following player, set destination point
-//				if( !playerDetected_ )
-//				{
-//					// Distraction point has been set
-//					if( distractionPoint_ != NO_DISTRACTION_SET )
-//					{
-//						// Clear distraction point
-//						distractionPoint_ = NO_DISTRACTION_SET;
-//
-//						// Go to actual point
-//						nav_.SetDestination( path_[destPointId_] );
-//					}
-//					// No distraction point set, go to next destination
-//					else
-//					{
-						GoToNextPoint();
-//					}
-//				}
+				// Distraction point has been set
+				if( distractionPoint_ != NO_DISTRACTION_SET )
+				{
+					// Clear distraction point
+					distractionPoint_ = NO_DISTRACTION_SET;
+					
+					// Set seeking state
+					enemyState_ = EnemyState.Seeking;
+
+					Debug.Log( enemyState_ );
+
+					// Go to actual point
+					//nav_.SetDestination( path_[destPointId_] );
+				}
+				// No distraction point set, go to next destination
+				else
+				{
+					GoToNextPoint();
+				}
 			}
 
 			lastEnemyState_ = enemyState_;
@@ -334,5 +411,15 @@ public class EnemyController : MonoBehaviour {
 		nav_.SetDestination( path_[nextDestPointId_] );
 		nextDestPointId_ = ( nextDestPointId_ + 1 ) % path_.Length;
 		destPointId_ = ( destPointId_ + 1 ) % path_.Length;
+	}
+
+	void GoToActualPoint()
+	{
+		if( path_.Length == 0 )
+		{
+			return;
+		}
+
+		nav_.SetDestination( path_[destPointId_] );
 	}
 }
