@@ -22,7 +22,7 @@ public class EnemyHealth : MonoBehaviour
 	{
 		health_ -= damage;
 
-		// play sound
+		// TODO: play sound
 
 		if( health_ <= 0 )
 		{
@@ -36,7 +36,7 @@ public class EnemyHealth : MonoBehaviour
 		// is dead - true
 		capsuleCollider_.isTrigger = true;
 		// animation of death
-		// play sound
+		// TODO: play sound
 
 		// Disable navigation mesh agent
 		GetComponent<NavMeshAgent>().enabled = false;

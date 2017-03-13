@@ -91,7 +91,7 @@ public class PlayerHealth : MonoBehaviour
 		// Dead
 		else 
 		{
-			StartCoroutine(Death());
+			StartCoroutine( Death() );
 //			Death();
 		}
 

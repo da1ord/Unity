@@ -28,7 +28,7 @@ public class PlayerController : MonoBehaviour
 	// Player RigidBody instance
 	Rigidbody rb_;
 	// Player Animator instance
-	Animator anim_;
+//	Animator anim_;
 	// Walk audio source
 	AudioSource walkAudio_;
 
@@ -53,7 +53,7 @@ public class PlayerController : MonoBehaviour
 	void Start()
 	{
 		rb_ = GetComponent<Rigidbody>();
-		anim_ = GetComponentInChildren<Animator>();
+//		anim_ = GetComponentInChildren<Animator>();
 		walkAudio_ = GetComponent<AudioSource>();
 		gunsPivot_ = GameObject.Find( "Guns" );
 		shooting_ = GetComponentInChildren<PlayerShooting>();
@@ -171,6 +171,12 @@ public class PlayerController : MonoBehaviour
 			}
 		}
 
+		// Shoot - LMB
+		if( Input.GetMouseButton( 0 ) )
+		{
+			shooting_.Shoot();
+		}
+
 		// Enter scope mode - RMB
 		if( Input.GetMouseButtonDown( 1 ) )
 		{
@@ -189,12 +195,13 @@ public class PlayerController : MonoBehaviour
 		}
 
 		// Reload a weapon
-		if( Input.GetKeyDown( KeyCode.R ) && shooting_.totalBullets_ > 0 )
+		if( Input.GetKeyDown( KeyCode.R ) /*&& shooting_.totalBullets_ > 0*/ )
 		{
-			anim_.SetTrigger( "Reload" );
-			shooting_.clipBullets_ = ( shooting_.totalBullets_ < 30 ) ? shooting_.totalBullets_ : 30;
-			shooting_.totalBullets_ -= shooting_.clipBullets_;
-			shooting_.SetReloadTimer();
+//			anim_.SetTrigger( "Reload" );
+//			shooting_.clipBullets_ = ( shooting_.totalBullets_ < 30 ) ? shooting_.totalBullets_ : 30;
+//			shooting_.totalBullets_ -= shooting_.clipBullets_;
+//			shooting_.SetReloadTimer();
+			shooting_.Reload();
 		}
 
 		// Run

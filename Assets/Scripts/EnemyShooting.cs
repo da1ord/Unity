@@ -5,14 +5,14 @@ using UnityEngine;
 public class EnemyShooting : MonoBehaviour 
 {
 
-	public int clipBullets_ = 5;
-	public int damagePerShot_ = 5;
-	public float timeBetweenShots_ = 0.15f;
-	public float range_ = 100.0f;
+//	public int clipBullets_ = 5;
+//	public int damagePerShot_ = 5;
+//	public float timeBetweenShots_ = 0.15f;
+//	public float range_ = 100.0f;
 
-	float timer_;
-	float reloadTime_ = 1.7f;
-	float effectsDisplayTime_ = 0.02f;
+//	float timer_;
+//	float reloadTime_ = 1.7f;
+//	float effectsDisplayTime_ = 0.02f;
 	Ray shootRay_;
 	RaycastHit shootHit_;
 	LineRenderer gunLine_;
@@ -22,6 +22,10 @@ public class EnemyShooting : MonoBehaviour
 
 	GameObject player_;
 	PlayerHealth playerHealth_;
+
+	// TODO: Redo to IFace
+	// Player's active gun
+	SciFiRifle activeGun_;
 
 //	LayerMask shootableMask_;
 
@@ -36,61 +40,69 @@ public class EnemyShooting : MonoBehaviour
 		player_ = GameObject.FindGameObjectWithTag( "Player" );
 		playerHealth_ = player_.GetComponent<PlayerHealth>();
 
-		timer_ = 0.0f;
+		activeGun_ = GetComponentInChildren<SciFiRifle>();
 
-		damagePerShot_ = 0;
+//		timer_ = 0.0f;
+//
+//		damagePerShot_ = 0;
 
 //		shootableMask_ = LayerMask.GetMask( "Shootable" );
 	}
 
 	void Update() 
 	{
-		//if( timer_ > 0.0f )
-		{
-			timer_ -= Time.deltaTime;
-			if( timer_ < timeBetweenShots_ - effectsDisplayTime_ )
-			{
-				DisableEffects();
-			}
-		}
+//		timer_ -= Time.deltaTime;
+//		if( timer_ < timeBetweenShots_ - effectsDisplayTime_ )
+//		{
+//			DisableEffects();
+//		}
 	}
 
 	public void Shoot()
 	{
-		if( timer_ > 0.0f )
+		// Cannot shoot at this moment (so fast) or clip is empty
+		if( !activeGun_.CanShoot() )
 		{
 			return;
 		}
-		timer_ = timeBetweenShots_;
 
-		if( clipBullets_ == 0 )
-		{
-			anim_.SetTrigger( "Reload" );
-			// Set reload timer
-			timer_ = reloadTime_;
-			clipBullets_ = 5;
-			return;
-		}
+		activeGun_.Shoot();
+
+//		if( timer_ > 0.0f )
+//		{
+//			return;
+//		}
+//		timer_ = timeBetweenShots_;
+//
+//		if( clipBullets_ == 0 )
+//		{
+//			anim_.SetTrigger( "Reload" );
+//			// Set reload timer
+//			timer_ = reloadTime_;
+//			clipBullets_ = 5;
+//			return;
+//		}
+
 //		if( timer_ > timeBetweenShots_ * effectsDisplayTime_ )
 //		{
 //			return;
 //		}
 
-		clipBullets_--;
+//		clipBullets_--;
+//
+//		gunAudio_.Play();
+//
+//		gunLight_.enabled = true;
 
-		gunAudio_.Play();
+//		gunLine_.enabled = true;
+//		gunLine_.SetPosition( 0, transform.position );
 
-		gunLight_.enabled = true;
-
-		gunLine_.enabled = true;
-		gunLine_.SetPosition( 0, transform.position );
-
-		shootRay_.origin = transform.position;
-		shootRay_.direction = transform.forward;
+//		shootRay_.origin = transform.position;
+//		shootRay_.direction = transform.forward;
 
 		// Hurt player
-		playerHealth_.TakeDamage( damagePerShot_ );
-		gunLine_.SetPosition( 1, shootRay_.origin + shootRay_.direction * range_ );
+		playerHealth_.TakeDamage( 1 ); // activeGun_.GetDamagePerShot()
+//		gunLine_.SetPosition( 1, shootRay_.origin + shootRay_.direction * activeGun_.GetRange() );
 
 //		if( Physics.Raycast( shootRay_, out shootHit_, range_, shootableMask_ ) )
 //		{
@@ -108,9 +120,9 @@ public class EnemyShooting : MonoBehaviour
 //		}
 	}
 
-	void DisableEffects()
-	{
-		gunLine_.enabled = false;
-		gunLight_.enabled = false;
-	}
+//	void DisableEffects()
+//	{
+//		gunLine_.enabled = false;
+//		gunLight_.enabled = false;
+//	}
 }

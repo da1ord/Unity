@@ -10,6 +10,12 @@ public class EnemyController : MonoBehaviour {
 	EnemyHealth enemyHealth_;
 	EnemyShooting enemyShooting_;
 	PlayerController playerController_;
+	PlayerHealth playerHealth_;
+
+	// TODO: Redo to IFace
+	// Player's active gun
+	SciFiRifle activeGun_;
+
 	bool playerDetected_ = false;
 
 	enum EnemyState { Patrolling, Distracted, Seeking, Following, Shooting };
@@ -25,7 +31,6 @@ public class EnemyController : MonoBehaviour {
 	float rushSpeed_ = 7.5f;
 
 	// TODO: Get from gun
-	float gunRange_ = 10.0f;
 	float minShootRange_;
 	float maxShootRange_;
 
@@ -50,11 +55,14 @@ public class EnemyController : MonoBehaviour {
 		enemyHealth_ = GetComponent<EnemyHealth>();
 		enemyShooting_ = gameObject.GetComponentInChildren<EnemyShooting>();
 		playerController_ = GameObject.FindGameObjectWithTag( "Player" ).GetComponent<PlayerController>();
+		playerHealth_ = player_.GetComponent<PlayerHealth>();
+
+		activeGun_ = GetComponentInChildren<SciFiRifle>();
 
 		environmentMask_ = LayerMask.GetMask( "Environment" );
 
-		minShootRange_ = gunRange_ - 2;
-		maxShootRange_ = gunRange_ + 2;
+		minShootRange_ = activeGun_.GetRange() / 4.0f - 5.0f; // 10
+		maxShootRange_ = activeGun_.GetRange() / 4.0f + 5.0f; // 20
 		distractionPoint_ = NO_DISTRACTION_SET;
 
 		GoToNextPoint();
@@ -105,8 +113,15 @@ public class EnemyController : MonoBehaviour {
 						// Check if Player is in shooting range of enemy
 						if( playerDistance_ < maxShootRange_ )
 						{
-							enemyShooting_.Shoot();
-							Debug.DrawRay( transform.position, transform.forward * sightDistance_, Color.green );
+//							enemyShooting_.Shoot();
+							// Can shoot at this moment (shoot-enable timer elapsed) and clip is not empty
+							if( activeGun_.CanShoot() )
+							{
+								activeGun_.Shoot();
+								Debug.DrawRay( transform.position, transform.forward * sightDistance_, Color.green );
+								// Hurt player
+								playerHealth_.TakeDamage( 1 ); // activeGun_.GetDamagePerShot()
+							}
 
 							// Check if Player is too close to enemy
 							if( playerDistance_ < minShootRange_ )
@@ -153,6 +168,14 @@ public class EnemyController : MonoBehaviour {
 					enemyState_ = EnemyState.Distracted;
 					distractionPoint_ = player_.transform.position;
 				}
+			}
+
+			// TODO: Redo somehow :)
+			// Check if NavMeshAgent is enabled to avoid errors
+			if( nav_.enabled == false )
+			{
+				lastEnemyState_ = enemyState_;
+				return;
 			}
 
 //			Debug.Log( enemyState_ );

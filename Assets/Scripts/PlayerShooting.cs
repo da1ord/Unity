@@ -5,121 +5,91 @@ using UnityEngine.UI;
 
 public class PlayerShooting : MonoBehaviour 
 {
-
-	public int clipBullets_ = 30;
-	public int totalBullets_ = 120;
-
-	public int damagePerShot_ = 10;
-	public float timeBetweenShots_ = 0.15f;
-	public float range_ = 100.0f;
+//	public float timeBetweenShots_ = 0.15f;
+//	public float range_ = 100.0f;
 	public Text ammoText_;
 
 	public Camera playerCamera_;
 
-	float timer_;
-	float reloadTime_ = 1.7f;
-	float effectsDisplayTime_ = 0.01f;
+//	float timer_;
+//	float reloadTime_ = 1.7f;
+//	float effectsDisplayTime_ = 0.01f;
 	Ray shootRay_;
 	RaycastHit shootHit_;
-	LineRenderer gunLine_;
-	AudioSource gunAudio_;
-	Light gunLight_;
 
 	LayerMask shootableMask_;
 	PlayerController playerController_;
 
+	// TODO: Redo to IFace
+	// Player's active gun
+	SciFiRifle activeGun_;
+
 	// Init function
 	void Awake() 
 	{
-		gunLine_ = GetComponent<LineRenderer>();
-		gunLight_ = GetComponent<Light>();
-		gunAudio_ = GetComponent<AudioSource>();
-
 		shootableMask_ = LayerMask.GetMask( "Shootable" );
 		playerController_ = transform.root.GetComponent<PlayerController>();
+
+		activeGun_ = GetComponentInChildren<SciFiRifle>();
 	}
 
 	void Update() 
 	{
-		timer_ -= Time.deltaTime;
-
-		if( Input.GetMouseButton( 0 ) && timer_ <= 0.0f && clipBullets_ > 0 )
-		{
-			Shoot();
-		}
-
-		if( timer_ < timeBetweenShots_ - effectsDisplayTime_ )
-		{
-			DisableEffects();
-		}
+//		timer_ -= Time.deltaTime;
 
 		// Update ammo text
-		ammoText_.text = clipBullets_.ToString() + "/" + totalBullets_.ToString();
+//		ammoText_.text = clipBullets_.ToString() + "/" + totalBullets_.ToString();
+		ammoText_.text = activeGun_.GetClipBullets().ToString() + "/" + activeGun_.GetTotalBullets().ToString();
 	}
 
-	// Set reload timer. Time of the reload animation to wait
-	public void SetReloadTimer()
+	public void Shoot()
 	{
-		timer_ = reloadTime_;
-	}
+		// Cannot shoot at this moment (so fast) or clip is empty
+		if( !activeGun_.CanShoot() )
+		{
+			return;
+		}
 
-	void Shoot()
-	{
-		timer_ = timeBetweenShots_;
-		clipBullets_--;
-
-		gunAudio_.Play();
-
-		gunLight_.enabled = true;
+		activeGun_.Shoot();
 
 		// Setup shoot ray
 		shootRay_.origin = playerCamera_.transform.position;
 		shootRay_.direction = playerCamera_.transform.forward;
 
 		// Enable gunline rendering
-		gunLine_.enabled = true;
-		gunLine_.SetPosition( 0, transform.position );
+//		gunLine_.enabled = true;
+//		gunLine_.SetPosition( 0, transform.position );
 
 		// Hit enemy
 		// TODO: Remove mask to test raycast against environment?
 //		if( Physics.Raycast( shootRay_, out shootHit_, range_, shootableMask_ ) )
-		if( Physics.Raycast( shootRay_, out shootHit_, range_ ) )
+		if( Physics.Raycast( shootRay_, out shootHit_, activeGun_.GetRange() ) )
 		{
 			if( shootHit_.collider.tag == "Enemy" )
 			{
 				EnemyHealth enemyHealth = shootHit_.collider.GetComponent<EnemyHealth>();
 				if( enemyHealth != null )
 				{
-					enemyHealth.TakeDamage( damagePerShot_ );
+					enemyHealth.TakeDamage( activeGun_.GetDamagePerShot() );
+					Debug.Log( activeGun_.GetDamagePerShot() );
 				}
 			}
 
-			gunLine_.startColor = Color.green;
-			gunLine_.SetPosition( 1, shootHit_.point );
+//			gunLine_.startColor = Color.green;
+//			gunLine_.SetPosition( 1, shootHit_.point );
 		}
 		// Missed enemy
 		else
 		{
-			gunLine_.startColor = Color.red;
-			gunLine_.SetPosition( 1, shootRay_.origin + shootRay_.direction * range_ );
+//			gunLine_.startColor = Color.red;
+//			gunLine_.SetPosition( 1, shootRay_.origin + shootRay_.direction * range_ );
 		}
 
-		// Set distraction point of each enemy
-		// TODO: use observer pattern
-//		EnemyController[] allEnemies = GameObject.FindObjectsOfType<EnemyController>();
-//		foreach( EnemyController enemy in allEnemies )
-//		{
-//			if( ( enemy.transform.position - transform.position ).magnitude < gunAudio_.minDistance )
-//			{
-//				enemy.SetDistractionPoint( transform.position );
-//			}
-//		}
-		playerController_.SetNoiseLevel( gunAudio_.minDistance );
+		playerController_.SetNoiseLevel( activeGun_.GetNoiseLevel() );
 	}
 
-	void DisableEffects()
+	public void Reload()
 	{
-		gunLine_.enabled = false;
-		gunLight_.enabled = false;
+		activeGun_.Reload();
 	}
 }
