@@ -271,14 +271,4 @@ public class PlayerController : MonoBehaviour
 	{
 		return noiseLevel_;
 	}
-
-	void OnTriggerEnter( Collider other )
-	{
-		//		if (other.gameObject.CompareTag ("Pick Up")) 
-		//		{
-		//			other.gameObject.SetActive (false);
-		//			count++;
-		//			SetCountText ();
-		//		}
-	}
 }

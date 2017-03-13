@@ -110,4 +110,12 @@ public class SciFiRifle : MonoBehaviour
 	{
 		return range_;
 	}
+	public void AddClip() 
+	{
+		totalBullets_ += maxClipBullets_;
+		if( totalBullets_ > maxBullets_ )
+		{
+			totalBullets_ = maxBullets_;
+		}
+	}
 }

@@ -6,6 +6,7 @@ using UnityEngine.AI;
 public class EnemyHealth : MonoBehaviour 
 {
 	public int health_ = 100;
+	public GameObject clip_;
 	CapsuleCollider capsuleCollider_;
 
 	void Awake() 
@@ -37,6 +38,8 @@ public class EnemyHealth : MonoBehaviour
 		capsuleCollider_.isTrigger = true;
 		// animation of death
 		// TODO: play sound
+
+		Instantiate( clip_, transform.position, transform.rotation );
 
 		// Disable navigation mesh agent
 		GetComponent<NavMeshAgent>().enabled = false;

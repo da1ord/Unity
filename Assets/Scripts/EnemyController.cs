@@ -130,30 +130,12 @@ public class EnemyController : MonoBehaviour {
 							}
 						}
 					}
-					// Player is behind environment structure + enemy just lost the Player
-					// TODO: Can remove this?
-//					else if( lastEnemyState_ > EnemyState.Distracted ) // Seeking, Following, Shooting
-//					{
-//						PlayerNotInSight();
-//					}
-					// Player is behind environment structure
-					else
-					{
-//						PlayerNotInSight();
-					}
 				}
-				// Player out of enemy sight cone
-				else
-				{
-//					PlayerNotInSight();
-				}
-			}
-			// Player out of enemy sight distance
-			else
-			{
-//				PlayerNotInSight();
 			}
 
+			// Player is behind environment structure or
+			// Player out of enemy sight cone or
+			// Player out of enemy sight distance
 			if( !playerDetected_ )
 			{
 				PlayerNotInSight();
@@ -171,7 +153,8 @@ public class EnemyController : MonoBehaviour {
 			}
 
 			// TODO: Redo somehow :)
-			// Check if NavMeshAgent is enabled to avoid errors
+			// Check if NavMeshAgent is enabled to avoid errors (calling of SetDestination and GetRemainingDistance 
+			// on disabled NavMeshAgent)
 			if( nav_.enabled == false )
 			{
 				lastEnemyState_ = enemyState_;
