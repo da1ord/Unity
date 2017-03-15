@@ -14,7 +14,9 @@ public class EnemyController : MonoBehaviour {
 
 	// TODO: Redo to IFace
 	// Player's active gun
-	SciFiRifle activeGun_;
+	//	SciFiRifle activeGun_;
+	M4Rifle activeGun_;
+	Animator anim_;
 
 	bool playerDetected_ = false;
 
@@ -26,9 +28,9 @@ public class EnemyController : MonoBehaviour {
 	public float sightDistance_ = 30.0f;
 	public float fovYHalf_ = 30.0f;
 
-	float walkSpeed_ = 4.5f;
-	float fastWalkSpeed_ = 6.0f;
-	float rushSpeed_ = 7.5f;
+	float walkSpeed_ = 1.5f;/*4.5f*/
+	float fastWalkSpeed_ = 6.0f;/*6.0f*/
+	float rushSpeed_ = 6.0f;/*7.5f*/
 
 	// TODO: Get from gun
 	float minShootRange_;
@@ -57,7 +59,8 @@ public class EnemyController : MonoBehaviour {
 		playerController_ = GameObject.FindGameObjectWithTag( "Player" ).GetComponent<PlayerController>();
 		playerHealth_ = player_.GetComponent<PlayerHealth>();
 
-		activeGun_ = GetComponentInChildren<SciFiRifle>();
+		activeGun_ = GetComponentInChildren<M4Rifle>();
+		anim_ = GetComponent<Animator>();
 
 		environmentMask_ = LayerMask.GetMask( "Environment" );
 
@@ -126,7 +129,7 @@ public class EnemyController : MonoBehaviour {
 							// Check if Player is too close to enemy
 							if( playerDistance_ < minShootRange_ )
 							{
-								nav_.enabled = false;
+//								nav_.enabled = false;
 							}
 						}
 					}
@@ -168,7 +171,10 @@ public class EnemyController : MonoBehaviour {
 				{
 					// Set walk speed
 					nav_.speed = walkSpeed_;
-
+					
+					anim_.SetFloat( "Speed", walkSpeed_ );
+					nav_.acceleration = walkSpeed_;
+					
 					// Go to actual point
 					nav_.SetDestination( path_[destPointId_] );
 					break;
@@ -176,8 +182,11 @@ public class EnemyController : MonoBehaviour {
 				case EnemyState.Distracted:
 				{
 					// Walk faster towards distraction point
-					nav_.speed = fastWalkSpeed_;
-
+					nav_.speed = walkSpeed_;
+					
+					anim_.SetFloat( "Speed", walkSpeed_ );
+					nav_.acceleration = walkSpeed_;
+					
 					// Go to the distraction point
 					nav_.SetDestination( distractionPoint_ );
 					break;
@@ -186,7 +195,10 @@ public class EnemyController : MonoBehaviour {
 				{
 					// Run towards player
 					nav_.speed = rushSpeed_;
-
+					
+					anim_.SetFloat( "Speed", rushSpeed_ );
+					nav_.acceleration = rushSpeed_;
+					
 					// Follow the player
 					nav_.SetDestination( player_.position );
 					Debug.DrawRay( transform.position, transform.up * 5.0f, Color.yellow );
