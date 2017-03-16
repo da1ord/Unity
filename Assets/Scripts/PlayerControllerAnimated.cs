@@ -39,15 +39,16 @@ public class PlayerControllerAnimated : MonoBehaviour
 
 	CapsuleCollider capsule_;
 
+	public Vector3 playerPosition_;
+
 	// Information if player is on the ground
 	bool isGrounded_ = true;
 	// Information if player is crouching
 	bool isCrouching_ = false;
 	// Mouse rotation angle along X-axis
-	float xRot_ = 0.0f;
+	public float xRot_ = 0.0f;
 
 	bool isMoving_ = false;
-	Vector3 position_;
 	Vector3 gunPosition_;
 	float noiseLevel_ = 0.0f;
 
@@ -67,8 +68,6 @@ public class PlayerControllerAnimated : MonoBehaviour
 
 		// Avoid playing of walk sound
 		rb_.MovePosition( startPosition_ );
-		position_.x = rb_.position.x;
-		position_.z = rb_.position.z;
 
 		// Hide mouse cursor
 		Cursor.visible = false;
@@ -87,6 +86,7 @@ public class PlayerControllerAnimated : MonoBehaviour
 	// Update function that runs when physics is calculated?
 	void FixedUpdate () 
 	{
+		playerPosition_ = capsule_.bounds.center;
 		PlayerMovement();
 	}
 
@@ -127,44 +127,13 @@ public class PlayerControllerAnimated : MonoBehaviour
 		xRot_ = Mathf.Clamp( xRot_, -90.0f, 90.0f );
 
 		// Rotate just the camera along X-axis
-		cam_.transform.localEulerAngles = new Vector3( -xRot_, 0.0f, 0.0f );
+		//cam_.transform.localEulerAngles = new Vector3( -xRot_, 0.0f, 0.0f );
 
 		// Rotate gun around pivot point
 		gunsPivot_.transform.localEulerAngles = new Vector3( -xRot_, 0.0f, 0.0f );
 
-//		// Check if the player is moving - play sound
-//		if(( position_.x != rb_.position.x || position_.z != rb_.position.z ) && isGrounded_ )
-//		{
-////			isMoving_ = true;
-////			Debug.Log( position_.z + " " + rb_.position.z );
-////			Debug.DrawLine( transform.position, transform.position + transform.up * 10 );
-//			if( !walkAudio_.isPlaying )
-//			{
-//				walkAudio_.Play();
-//			}
-//			// Set distraction point of each enemy
-//			// TODO: use observer pattern
-////			EnemyController[] allEnemies = GameObject.FindObjectsOfType<EnemyController>();
-////			foreach( EnemyController enemy in allEnemies )
-////			{
-////				if( ( enemy.transform.position - transform.position ).magnitude < walkAudio_.minDistance )
-////				{
-////					enemy.SetDistractionPoint( transform.position );
-////				}
-////			}
-//			noiseLevel_ = walkAudio_.minDistance;
-//		}
-//		// Player is not moving
-//		else
-//		{
-////			isMoving_ = false;
-//			anim_.SetFloat( "Forward", 0.0f );
-////			Debug.DrawLine( transform.position, transform.position + transform.up * 5 );
-//			walkAudio_.Stop();
-//		}
-
 		// Check if the player is moving - play sound
-		if( isMoving_ )
+		if( isMoving_ && isGrounded_ )
 		{
 			if( !walkAudio_.isPlaying )
 			{
@@ -178,10 +147,6 @@ public class PlayerControllerAnimated : MonoBehaviour
 			anim_.SetFloat( "Forward", 0.0f );
 			walkAudio_.Stop();
 		}
-
-		// Save player position
-		position_.x = rb_.position.x;
-		position_.z = rb_.position.z;
 	}
 
 	// Processes keyboard input except from player movement
@@ -213,9 +178,9 @@ public class PlayerControllerAnimated : MonoBehaviour
 		{
 			gunPosition_ = gun_.transform.localPosition;
 			gun_.transform.position = cam_.transform.position;
-			gun_.transform.localPosition += new Vector3( -0.003f, -0.11f, 0.2f );/*new Vector3( -0.006f, -0.11f, 0.2f );*/
+			gun_.transform.localPosition += new Vector3( -0.003f, -0.108f, 0.2f );/*new Vector3( -0.006f, -0.11f, 0.2f );*/
 			cam_.fieldOfView /= 2.0f;
-//			crosshair_.enabled = false;
+			crosshair_.enabled = false;
 		}
 		// Exit scope mode
 		else if( Input.GetMouseButtonUp( 1 ) )
@@ -228,15 +193,11 @@ public class PlayerControllerAnimated : MonoBehaviour
 		// Reload a weapon
 		if( Input.GetKeyDown( KeyCode.R ) /*&& shooting_.totalBullets_ > 0*/ )
 		{
-//			anim_.SetTrigger( "Reload" );
-//			shooting_.clipBullets_ = ( shooting_.totalBullets_ < 30 ) ? shooting_.totalBullets_ : 30;
-//			shooting_.totalBullets_ -= shooting_.clipBullets_;
-//			shooting_.SetReloadTimer();
 			shooting_.Reload();
 		}
 
 		// Run
-		if( Input.GetKeyDown( KeyCode.LeftShift ) )
+		if( Input.GetKeyDown( KeyCode.LeftShift ) && !isCrouching_ )
 		{
 			movementSpeed_ = 10.0f;
 			walkAudio_.clip = runClip_;
@@ -258,8 +219,10 @@ public class PlayerControllerAnimated : MonoBehaviour
 			if( !isCrouching_ )
 			{
 				isCrouching_ = true;
-//				capsule_.height /= 2.0f;
-//				capsule_.center /= 2.0f;
+				capsule_.height /= 2.0f;
+				capsule_.center /= 2.0f;
+				//cam_.transform.localPosition -= new Vector3( 0.0f, 0.6f, -0.2f );
+				gunsPivot_.transform.localPosition -= new Vector3( 0.0f, 0.65f, -0.2f );
 			}
 //			transform.localScale = new Vector3( transform.localScale.x, 0.5f, transform.localScale.z );
 //			transform.localPosition -= new Vector3( 0.0f, 0.4f, 0.0f );
@@ -270,14 +233,16 @@ public class PlayerControllerAnimated : MonoBehaviour
 			if( isCrouching_ )
 			{
 				isCrouching_ = false;
-//				capsule_.height *= 2.0f;
-//				capsule_.center *= 2.0f;
+				capsule_.height *= 2.0f;
+				capsule_.center *= 2.0f;
+				//cam_.transform.localPosition += new Vector3( 0.0f, 0.6f, -0.2f );
+				gunsPivot_.transform.localPosition += new Vector3( 0.0f, 0.65f, -0.2f );
 			}
 //			transform.localScale = new Vector3( transform.localScale.x, 1.0f, transform.localScale.z );
 //			transform.localPosition += new Vector3( 0.0f, 0.4f, 0.0f );
 		}
 
-		if( Physics.Raycast( transform.position, -Vector3.up, 1.0f ) )
+		if( Physics.Raycast( playerPosition_, -Vector3.up, 1.0f ) )/*transform.position*/
 		{
 			isGrounded_ = true;
 		}

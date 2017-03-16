@@ -8,16 +8,30 @@ public class EnemyController : MonoBehaviour {
 	Transform player_;
 	NavMeshAgent nav_;
 	EnemyHealth enemyHealth_;
-	EnemyShooting enemyShooting_;
+//	EnemyShooting enemyShooting_;
 //	PlayerController playerController_;
 	PlayerControllerAnimated playerController_;
 	PlayerHealth playerHealth_;
 
+	Vector3 enemyPosition_;
+	Vector3 playerPosition_;
+	CapsuleCollider capsule_;
 	// TODO: Redo to IFace
 	// Player's active gun
 	//	SciFiRifle activeGun_;
 	M4Rifle activeGun_;
 	Animator anim_;
+	// Walk audio source
+	AudioSource walkAudio_;
+	// Speech audio source
+	AudioSource speechAudio_;
+	// Walk audio clip
+	public AudioClip walkClip_;
+	// Run audio clip
+	public AudioClip runClip_;
+
+	// Player detected audio clip
+	public AudioClip playerDetectedClip_;
 
 	bool playerDetected_ = false;
 
@@ -56,15 +70,19 @@ public class EnemyController : MonoBehaviour {
 		player_ = GameObject.FindGameObjectWithTag( "Player" ).transform;
 		nav_ = GetComponent<NavMeshAgent>();
 		enemyHealth_ = GetComponent<EnemyHealth>();
-		enemyShooting_ = gameObject.GetComponentInChildren<EnemyShooting>();
+//		enemyShooting_ = gameObject.GetComponentInChildren<EnemyShooting>();
 //		playerController_ = GameObject.FindGameObjectWithTag( "Player" ).GetComponent<PlayerController>();
 		playerController_ = GameObject.FindGameObjectWithTag( "Player" ).GetComponent<PlayerControllerAnimated>();
 		playerHealth_ = player_.GetComponent<PlayerHealth>();
 
 		activeGun_ = GetComponentInChildren<M4Rifle>();
 		anim_ = GetComponent<Animator>();
+		walkAudio_ = GetComponents<AudioSource>()[0];
+		speechAudio_ = GetComponents<AudioSource>()[1];
 
 		environmentMask_ = LayerMask.GetMask( "Environment" );
+
+		capsule_ = GetComponent<CapsuleCollider>();
 
 		minShootRange_ = activeGun_.GetRange() / 4.0f - 5.0f; // 10
 		maxShootRange_ = activeGun_.GetRange() / 4.0f + 5.0f; // 20
@@ -76,6 +94,8 @@ public class EnemyController : MonoBehaviour {
 
 	void Update()
 	{
+		enemyPosition_ = capsule_.bounds.center;
+		playerPosition_ = playerController_.playerPosition_;
 //		Debug.Log( enemyState_ );
 //		Debug.Log( distractionPoint_ );
 
@@ -90,8 +110,12 @@ public class EnemyController : MonoBehaviour {
 			Debug.DrawRay( transform.position, right * sightDistance_, Color.blue );
 		
 			// Get direction to player
-			Vector3 playerDirection = player_.position - transform.position;
+//			Vector3 playerDirection = player_.position - enemyPosition_;
+			Vector3 playerDirection = playerPosition_ - enemyPosition_;
 			playerDistance_ = playerDirection.magnitude;
+
+			walkAudio_.volume = Mathf.Min( 1.0f, 1.0f / playerDistance_ );
+			speechAudio_.volume = Mathf.Min( 1.0f, 5.0f / playerDistance_ );
 
 			nav_.enabled = true;
 			playerDetected_ = false;
@@ -105,13 +129,18 @@ public class EnemyController : MonoBehaviour {
 				{
 					// Player is seen by enemy (no environment in a way)
 //					if( Physics.Raycast( transform.position, playerDirection, sightDistance_, LayerMask.GetMask( "Player" ) ) )
-					if( !Physics.Raycast( transform.position, playerDirection, playerDistance_, environmentMask_ ) )
+					if( !Physics.Raycast( enemyPosition_, playerDirection, playerDistance_, environmentMask_ ) )
 					{
+						Debug.DrawLine( enemyPosition_, playerPosition_ );
 						//Debug.Log( distractionPoint_ );
 						playerDetected_ = true;
+						if( !speechAudio_.isPlaying )
+						{
+							speechAudio_.Play();
+						}
 						enemyState_ = EnemyState.Following;
 
-						distractionPoint_ = player_.transform.position;
+						distractionPoint_ = playerPosition_;//player_.transform.position;
 
 						// TODO: LookAt player? no need to check for the next angle
 
@@ -125,13 +154,16 @@ public class EnemyController : MonoBehaviour {
 								activeGun_.Shoot();
 								Debug.DrawRay( transform.position, transform.forward * sightDistance_, Color.green );
 								// Hurt player
-								playerHealth_.TakeDamage( 1 ); // activeGun_.GetDamagePerShot()
+								playerHealth_.TakeDamage( 0 ); // activeGun_.GetDamagePerShot()
 							}
 
 							// Check if Player is too close to enemy
 							if( playerDistance_ < minShootRange_ )
 							{
-//								nav_.enabled = false;
+								nav_.enabled = false;
+//								nav_.speed = 0.0f;
+								anim_.SetFloat( "Speed", 0.0f );
+//								nav_.acceleration = 0.0f;
 							}
 						}
 					}
@@ -153,7 +185,7 @@ public class EnemyController : MonoBehaviour {
 				{
 					// Set distracted state
 					enemyState_ = EnemyState.Distracted;
-					distractionPoint_ = player_.transform.position;
+					distractionPoint_ = playerPosition_;
 				}
 			}
 
@@ -226,6 +258,34 @@ public class EnemyController : MonoBehaviour {
 					break;
 				}
 			}
+
+			// TODO: Redo to not set it every frame
+			// Enemy is moving
+			if( enemyState_ != EnemyState.Seeking )
+			{
+				if( nav_.speed < 5.0f )
+				{
+					walkAudio_.clip = walkClip_;
+					walkAudio_.minDistance = 5;
+					walkAudio_.maxDistance = 10;
+				}
+				else
+				{
+					walkAudio_.clip = runClip_;
+					walkAudio_.minDistance = 15;
+					walkAudio_.maxDistance = 30;
+				}
+				if( !walkAudio_.isPlaying )
+				{
+					walkAudio_.Play();
+				}
+			}
+			// Enemy is not moving
+			else
+			{
+				walkAudio_.Stop();
+			}
+
 
 			// TODO: Refactor!
 			// Check destination remaining distance
