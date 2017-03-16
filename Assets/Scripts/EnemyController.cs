@@ -9,7 +9,8 @@ public class EnemyController : MonoBehaviour {
 	NavMeshAgent nav_;
 	EnemyHealth enemyHealth_;
 	EnemyShooting enemyShooting_;
-	PlayerController playerController_;
+//	PlayerController playerController_;
+	PlayerControllerAnimated playerController_;
 	PlayerHealth playerHealth_;
 
 	// TODO: Redo to IFace
@@ -56,7 +57,8 @@ public class EnemyController : MonoBehaviour {
 		nav_ = GetComponent<NavMeshAgent>();
 		enemyHealth_ = GetComponent<EnemyHealth>();
 		enemyShooting_ = gameObject.GetComponentInChildren<EnemyShooting>();
-		playerController_ = GameObject.FindGameObjectWithTag( "Player" ).GetComponent<PlayerController>();
+//		playerController_ = GameObject.FindGameObjectWithTag( "Player" ).GetComponent<PlayerController>();
+		playerController_ = GameObject.FindGameObjectWithTag( "Player" ).GetComponent<PlayerControllerAnimated>();
 		playerHealth_ = player_.GetComponent<PlayerHealth>();
 
 		activeGun_ = GetComponentInChildren<M4Rifle>();

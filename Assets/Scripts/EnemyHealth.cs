@@ -39,7 +39,11 @@ public class EnemyHealth : MonoBehaviour
 		// animation of death
 		// TODO: play sound
 
-		Instantiate( clip_, transform.position, transform.rotation );
+		// Make sure the clip spawns in the air
+		Vector3 clipSpawnPosition = transform.position;
+		clipSpawnPosition.y = 1.0f;
+
+		Instantiate( clip_, clipSpawnPosition, transform.rotation );
 
 		// Disable navigation mesh agent
 		GetComponent<NavMeshAgent>().enabled = false;

@@ -18,7 +18,8 @@ public class PlayerShooting : MonoBehaviour
 	RaycastHit shootHit_;
 
 	LayerMask shootableMask_;
-	PlayerController playerController_;
+//	PlayerController playerController_;
+	PlayerControllerAnimated playerController_;
 
 	// TODO: Redo to IFace
 	// Player's active gun
@@ -28,7 +29,8 @@ public class PlayerShooting : MonoBehaviour
 	void Awake() 
 	{
 		shootableMask_ = LayerMask.GetMask( "Shootable" );
-		playerController_ = transform.root.GetComponent<PlayerController>();
+//		playerController_ = transform.root.GetComponent<PlayerController>();
+		playerController_ = transform.root.GetComponent<PlayerControllerAnimated>();
 
 		activeGun_ = GetComponentInChildren<SciFiRifle>();
 	}
