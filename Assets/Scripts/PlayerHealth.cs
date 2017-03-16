@@ -105,7 +105,7 @@ public class PlayerHealth : MonoBehaviour
 		// Unfreeze rotation to be able to fall
 		rb_.freezeRotation = false;
 		// Apply force to fall
-		rb_.AddForceAtPosition( new Vector3( 10.0f, 0.0f, 0.0f ), transform.position +  new Vector3( 0.0f, 0.5f, 0.0f ) );
+		rb_.AddForceAtPosition( new Vector3( 10.0f, 0.0f, 0.0f ), transform.position + new Vector3( 0.0f, 0.5f, 0.0f ) );
 		// Wait to fall
 		yield return new WaitForSeconds( 2 );
 		// Set kinematic to avoid collisions

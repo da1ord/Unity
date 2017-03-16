@@ -18,6 +18,10 @@ public class PlayerControllerAnimated : MonoBehaviour
 	public AudioClip walkClip_;
 	// Run audio clip
 	public AudioClip runClip_;
+	// Jump audio clip
+	public AudioClip jumpClip_;
+	// Fall audio clip
+	public AudioClip fallClip_;
 
 	public Image crosshair_;
 
@@ -28,9 +32,11 @@ public class PlayerControllerAnimated : MonoBehaviour
 	// Player RigidBody instance
 	Rigidbody rb_;
 	// Player Animator instance
-//	Animator anim_;
+	//	Animator anim_;
 	// Walk audio source
 	AudioSource walkAudio_;
+	// Walk audio source
+	AudioSource jumpAudio_;
 
 	Animator anim_;
 
@@ -56,8 +62,9 @@ public class PlayerControllerAnimated : MonoBehaviour
 	void Start()
 	{
 		rb_ = GetComponent<Rigidbody>();
-//		anim_ = GetComponentInChildren<Animator>();
-		walkAudio_ = GetComponent<AudioSource>();
+		//		anim_ = GetComponentInChildren<Animator>();
+		walkAudio_ = GetComponents<AudioSource>()[0];
+		jumpAudio_ = GetComponents<AudioSource>()[1];
 		gunsPivot_ = GameObject.Find( "Guns" );
 		shooting_ = GetComponentInChildren<PlayerShooting>();
 
@@ -103,6 +110,12 @@ public class PlayerControllerAnimated : MonoBehaviour
 		Vector3 moveV = transform.forward * axisV;
 		Vector3 movement = ( moveH + moveV ).normalized * movementSpeed_;
 
+		if( !jumpAudio_.isPlaying )
+		{
+			jumpAudio_.minDistance = 0;
+			jumpAudio_.maxDistance = 0;
+		}
+
 		if( movement.magnitude > 0 )
 		{
 			isMoving_ = true;
@@ -139,14 +152,18 @@ public class PlayerControllerAnimated : MonoBehaviour
 			{
 				walkAudio_.Play();
 			}
-			noiseLevel_ = walkAudio_.minDistance;
 		}
 		// Player is not moving
 		else
 		{
+			walkAudio_.minDistance = 0;
+			walkAudio_.maxDistance = 0;
 			anim_.SetFloat( "Forward", 0.0f );
 			walkAudio_.Stop();
 		}
+
+		// Set player's noise level
+		noiseLevel_ = ( walkAudio_.minDistance > jumpAudio_.minDistance ) ? walkAudio_.minDistance : jumpAudio_.minDistance;
 	}
 
 	// Processes keyboard input except from player movement
@@ -244,6 +261,14 @@ public class PlayerControllerAnimated : MonoBehaviour
 
 		if( Physics.Raycast( playerPosition_, -Vector3.up, 1.0f ) )/*transform.position*/
 		{
+			// Check if the player just reached the ground
+			if( isGrounded_ == false )
+			{
+				jumpAudio_.clip = fallClip_;
+				jumpAudio_.minDistance = 15;
+				jumpAudio_.maxDistance = 30;
+				jumpAudio_.Play();
+			}
 			isGrounded_ = true;
 		}
 		else
@@ -255,6 +280,10 @@ public class PlayerControllerAnimated : MonoBehaviour
 		if( Input.GetKeyDown( KeyCode.Space ) && isGrounded_ )
 		{
 			rb_.AddForce( new Vector3 ( 0.0f, 5.0f, 0.0f ), ForceMode.Impulse );
+			jumpAudio_.clip = jumpClip_;
+			jumpAudio_.minDistance = 10;
+			jumpAudio_.maxDistance = 20;
+			jumpAudio_.Play();
 		}
 
 
