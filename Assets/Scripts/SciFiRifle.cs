@@ -59,16 +59,23 @@ public class SciFiRifle : MonoBehaviour
 		canShoot_ = false;
 	}
 
-	public void Reload()
+	public bool Reload()
 	{
+        // Either shoot or reload timer is active -> don't allow reloading
+        if( timer_ > 0 && canShoot_ == false )
+        {
+            return false;
+        }
 		anim_.SetTrigger( "Reload" );
 		clipBullets_ = ( totalBullets_ < maxClipBullets_ ) ? totalBullets_ : maxClipBullets_;
 		totalBullets_ -= clipBullets_;
 		timer_ = reloadTime_;
 		canShoot_ = false;
+
+        return true;
 	}
 
-	void DisableEffects()
+	public void DisableEffects()
 	{
 		gunLight_.enabled = false;
 	}

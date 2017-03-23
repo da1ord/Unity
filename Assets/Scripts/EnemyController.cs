@@ -16,10 +16,10 @@ public class EnemyController : MonoBehaviour {
 	Vector3 enemyPosition_;
 	Vector3 playerPosition_;
 	CapsuleCollider capsule_;
-	// TODO: Redo to IFace
-	// Player's active gun
-	//	SciFiRifle activeGun_;
-	M4Rifle activeGun_;
+    // TODO: Redo to IFace
+    // Player's active gun
+    SciFiRifle activeGun_;
+    //M4Rifle activeGun_;
 	Animator anim_;
 	// Walk audio source
 	AudioSource walkAudio_;
@@ -75,7 +75,7 @@ public class EnemyController : MonoBehaviour {
 		playerController_ = GameObject.FindGameObjectWithTag( "Player" ).GetComponent<PlayerControllerAnimated>();
 		playerHealth_ = player_.GetComponent<PlayerHealth>();
 
-		activeGun_ = GetComponentInChildren<M4Rifle>();
+		activeGun_ = GetComponentInChildren<SciFiRifle>();
 		anim_ = GetComponent<Animator>();
 		walkAudio_ = GetComponents<AudioSource>()[0];
 		speechAudio_ = GetComponents<AudioSource>()[1];
@@ -120,6 +120,7 @@ public class EnemyController : MonoBehaviour {
 			nav_.enabled = true;
 			playerDetected_ = false;
 
+            // TODO: Refactor
 			// Player is in enemy sight
 			if( playerDistance_ < sightDistance_ )
 			{
@@ -156,13 +157,26 @@ public class EnemyController : MonoBehaviour {
 								// Hurt player
 								playerHealth_.TakeDamage( 0 ); // activeGun_.GetDamagePerShot()
 							}
+                            
+                            // Reload if needed
+                            if ( activeGun_.GetClipBullets() == 0)
+                            {
+                                // Disable effects after last bullet
+                                activeGun_.DisableEffects();
+                                // Reload
+                                activeGun_.Reload();
+                            }
 
-							// Check if Player is too close to enemy
-							if( playerDistance_ < minShootRange_ )
+                            // Check if Player is too close to enemy
+                            if ( playerDistance_ < minShootRange_ )
 							{
-								nav_.enabled = false;
-//								nav_.speed = 0.0f;
-								anim_.SetFloat( "Speed", 0.0f );
+                                nav_.enabled = false;
+
+                                Vector3 rotation = playerDirection.normalized;
+                                Quaternion lookRotation = Quaternion.LookRotation( new Vector3( rotation.x, 0, rotation.z ) );
+                                transform.rotation = Quaternion.Slerp( transform.rotation, lookRotation, Time.deltaTime * 5.0f );
+
+                                //nav_.speed = 0.0f;
 //								nav_.acceleration = 0.0f;
 							}
 						}
@@ -193,8 +207,9 @@ public class EnemyController : MonoBehaviour {
 			// Check if NavMeshAgent is enabled to avoid errors (calling of SetDestination and GetRemainingDistance 
 			// on disabled NavMeshAgent)
 			if( nav_.enabled == false )
-			{
-				lastEnemyState_ = enemyState_;
+            {
+                anim_.SetFloat( "Speed", 0.0f );
+                lastEnemyState_ = enemyState_;
 				return;
 			}
 
@@ -311,35 +326,6 @@ public class EnemyController : MonoBehaviour {
 
 					GoToActualPoint();
 				}
-//				if( ( enemyState_ == EnemyState.Patrolling || enemyState_ == EnemyState.Distracted ) )
-//				{
-//					// Distraction point has been set
-//					if( distractionPoint_ != NO_DISTRACTION_SET )
-//					{
-//						// Clear distraction point
-//						distractionPoint_ = NO_DISTRACTION_SET;
-//					
-//						// Set seeking state
-//						enemyState_ = EnemyState.Seeking;
-//
-//						Debug.Log( enemyState_ );
-//
-//						// Go to actual point
-//						//nav_.SetDestination( path_[destPointId_] );
-//					}
-//					// No distraction point set, go to next destination
-//					else
-//					{
-//						GoToNextPoint();
-//					}
-//				}
-//				else if( enemyState_ == EnemyState.Seeking && seekingTimer_ == 5.0f )
-//				{
-//					// Set patrolling state
-//					enemyState_ = EnemyState.Patrolling;
-//
-//					GoToActualPoint();
-//				}
 			}
 
 			lastEnemyState_ = enemyState_;

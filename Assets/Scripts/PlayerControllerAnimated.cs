@@ -82,7 +82,7 @@ public class PlayerControllerAnimated : MonoBehaviour
 		Cursor.lockState = CursorLockMode.Locked;
 
 		gunPosition_ = gun_.transform.position;
-	}
+}
 
 	// Update function that runs before every frame rendering?
 	void Update ()

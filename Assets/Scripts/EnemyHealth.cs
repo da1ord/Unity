@@ -54,7 +54,7 @@ public class EnemyHealth : MonoBehaviour
 		// Apply force to fall
 		rb_.AddForceAtPosition( new Vector3( 10.0f, 0.0f, 0.0f ), transform.position + new Vector3( 0.0f, 1.0f, 0.0f ) );
 		// Wait to fall
-		yield return new WaitForSeconds( 2 );
+		yield return new WaitForSeconds( 0 );
 		// Set kinematic to avoid collisions
 		rb_.isKinematic = true;
 		/*Test*/
