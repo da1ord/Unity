@@ -43,8 +43,7 @@ public class PlayerController : MonoBehaviour
 	bool isCrouching_ = false;
 	// Mouse rotation angle along X-axis
 	float xRot_ = 0.0f;
-
-	bool isMoving_ = false;
+    
 	Vector3 position_;
 	Vector3 gunPosition_;
 	float noiseLevel_ = 0.0f;
@@ -122,7 +121,6 @@ public class PlayerController : MonoBehaviour
 		// Check if the player is moving - play sound
 		if(( position_.x != rb_.position.x || position_.z != rb_.position.z ) && isGrounded_ )
 		{
-			isMoving_ = true;
 //			Debug.Log( position_.z + " " + rb_.position.z );
 //			Debug.DrawLine( transform.position, transform.position + transform.up * 10 );
 			if( !walkAudio_.isPlaying )
@@ -144,7 +142,6 @@ public class PlayerController : MonoBehaviour
 		// Player is not moving
 		else
 		{
-			isMoving_ = false;
 //			Debug.DrawLine( transform.position, transform.position + transform.up * 5 );
 			walkAudio_.Stop();
 		}

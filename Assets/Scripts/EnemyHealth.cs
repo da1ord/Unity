@@ -7,18 +7,25 @@ public class EnemyHealth : MonoBehaviour
 {
 	public int health_ = 100;
 	public GameObject clip_;
-	CapsuleCollider capsuleCollider_;
 
 	Rigidbody rb_;
 	NavMeshAgent nav_;
+    Animator anim_;
+    bool isDead_ = false;
 
-	void Awake() 
+    AudioSource walkAudio_;
+    AudioSource speechAudio_;
+    public AudioClip hurtClip_;
+    public AudioClip deathClip_;
+
+    void Awake() 
 	{
-		capsuleCollider_ = GetComponent<CapsuleCollider>();
-
 		rb_ = GetComponent<Rigidbody>();
-		nav_ = GetComponent<NavMeshAgent>();
-	}
+        nav_ = GetComponent<NavMeshAgent>();
+        anim_ = GetComponent<Animator>();
+        walkAudio_ = GetComponents<AudioSource>()[0];
+        speechAudio_ = GetComponents<AudioSource>()[1];
+    }
 	
 	void Update () 
 	{
@@ -27,48 +34,53 @@ public class EnemyHealth : MonoBehaviour
 
 	public void TakeDamage( int damage )
 	{
+        if( isDead_ )
+        {
+            return;
+        }
+
 		health_ -= damage;
 
-		// TODO: play sound
+        speechAudio_.clip = hurtClip_;
+        speechAudio_.Play();
 
 		if( health_ <= 0 )
 		{
 			StartCoroutine( Death() );
-//			Death();
 		}
 
 	}
 
 	IEnumerator Death()
 	{
-		// is dead - true
-		capsuleCollider_.isTrigger = true;
-		// animation of death
-		// TODO: play sound
+        // Set dead state
+        isDead_ = true;
 
-		/*Test*/
-		nav_.enabled = false;
-		nav_.updatePosition = false;
-		// Unfreeze rotation to be able to fall
-		rb_.freezeRotation = false;
+        // TODO: death animation
+        walkAudio_.Stop();
+        speechAudio_.clip = deathClip_;
+        speechAudio_.Play();
+
+        // Stop navMeshAgent and current animation 
+        anim_.Stop();
+        if( nav_.enabled )
+        {
+            nav_.Stop();
+        }
+        // Unfreeze rotation to be able to fall
+        rb_.freezeRotation = false;
 		// Apply force to fall
-		rb_.AddForceAtPosition( new Vector3( 10.0f, 0.0f, 0.0f ), transform.position + new Vector3( 0.0f, 1.0f, 0.0f ) );
-		// Wait to fall
-		yield return new WaitForSeconds( 0 );
-		// Set kinematic to avoid collisions
-		rb_.isKinematic = true;
-		/*Test*/
+		rb_.AddForceAtPosition( new Vector3( 2.0f, -0.5f, 0.0f ), transform.position + new Vector3( 0.0f, 1.0f, 0.0f ), ForceMode.Impulse );
+		// Wait until fall is finished
+		yield return new WaitForSeconds( 1 );
 
-		// Make sure the clip spawns in the air
+        // Spawn ammo clip
+		// Make sure the ammo clip spawns in the air and is oriented properly
 		Vector3 clipSpawnPosition = transform.position;
 		clipSpawnPosition.y = 1.0f;
+        Quaternion rotation = new Quaternion( 1, 0, 0, 0 );
 
-		Instantiate( clip_, clipSpawnPosition, transform.rotation );
-
-		// Disable navigation mesh agent
-//		GetComponent<NavMeshAgent>().enabled = false;
-		// Stop recalculating the static geometry
-//		GetComponent<Rigidbody>().isKinematic = true;
+        Instantiate( clip_, clipSpawnPosition, rotation );
 
 		Destroy( gameObject );
 	}

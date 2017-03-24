@@ -23,8 +23,6 @@ public class PlayerControllerAnimated : MonoBehaviour
 	// Fall audio clip
 	public AudioClip fallClip_;
 
-	public Image crosshair_;
-
 	public Vector3 startPosition_ = new Vector3( 0.1f, 0.9f, 0.1f );
 
 	// Pivot point along which the guns rotate (for looking around X-axis)
@@ -197,14 +195,12 @@ public class PlayerControllerAnimated : MonoBehaviour
 			gun_.transform.position = cam_.transform.position;
 			gun_.transform.localPosition += new Vector3( -0.003f, -0.108f, 0.2f );/*new Vector3( -0.006f, -0.11f, 0.2f );*/
 			cam_.fieldOfView /= 2.0f;
-			crosshair_.enabled = false;
 		}
 		// Exit scope mode
 		else if( Input.GetMouseButtonUp( 1 ) )
 		{
 			gun_.transform.localPosition = gunPosition_;
 			cam_.fieldOfView *= 2.0f;
-			crosshair_.enabled = true;
 		}
 
 		// Reload a weapon

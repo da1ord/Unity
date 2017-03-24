@@ -19,20 +19,23 @@ public class PlayerHealth : MonoBehaviour
 	float deathElapsedTime = 0.0f;
 
 	bool damaged_ = false;
-	bool isDead_ = false;
+	public bool isDead_ = false;
 
 	Rigidbody rb_;
 	Text deathText_;
 	Text restartText_;
 	Image deathImage_;
+    AudioSource hurtAudio_;
+    public AudioClip deathClip_;
 
-	void Awake() 
+    void Awake() 
 	{
 		rb_ = GetComponent<Rigidbody>();
 		deathText_ =  GameObject.Find( "DeathText" ).GetComponent<Text>();
 		restartText_ =  GameObject.Find( "RestartText" ).GetComponent<Text>();
 		deathImage_ = GameObject.Find( "DeathImage" ).GetComponent<Image>();
-	}
+        hurtAudio_ = GetComponents<AudioSource>()[2];
+    }
 
 	void Update () 
 	{
@@ -84,15 +87,16 @@ public class PlayerHealth : MonoBehaviour
 			health_ -= damage;
 			healthSlider_.value = health_;
 			healthText_.text = health_.ToString();
-			// play sound
-			// flash screen
+            hurtAudio_.Play();
 
 		}
 		// Dead
 		else 
 		{
+            hurtAudio_.clip = deathClip_;
+            hurtAudio_.Play();
+
 			StartCoroutine( Death() );
-//			Death();
 		}
 
 	}
@@ -102,27 +106,17 @@ public class PlayerHealth : MonoBehaviour
 		// Set dead state
 		isDead_ = true;
 
-		// Unfreeze rotation to be able to fall
-		rb_.freezeRotation = false;
+        // TODO: death animation
+
+        // Unfreeze rotation to be able to fall
+        rb_.freezeRotation = false;
 		// Apply force to fall
 		rb_.AddForceAtPosition( new Vector3( 10.0f, 0.0f, 0.0f ), transform.position + new Vector3( 0.0f, 0.5f, 0.0f ) );
-		// Wait to fall
-		yield return new WaitForSeconds( 2 );
-		// Set kinematic to avoid collisions
-		rb_.isKinematic = true;
-
-		// animation of death
-		// play sound
+        // Wait until fall is finished
+        yield return new WaitForSeconds( 2 );
+        
 		// disable movement
 
-
-
-		// Disable navigation mesh agent
-//		GetComponent<NavMeshAgent>().enabled = false;
-		// Stop recalculating the static geometry
-//		GetComponent<Rigidbody>().isKinematic = true;
-
-		// TODO: Respawn?
-		//Destroy( gameObject );
+        // TODO: Respawn?
 	}
 }

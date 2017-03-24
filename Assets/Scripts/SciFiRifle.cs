@@ -21,16 +21,21 @@ public class SciFiRifle : MonoBehaviour
 
 	bool canShoot_ = true;
 
-	public AudioSource shootAudio_;
-	public Light gunLight_;
+    AudioSource gunAudio_;
+    public AudioClip shootClip_;
+    public AudioClip reloadClip_;
+
+    public Light gunLight_;
 	// Gun Animator instance
 	Animator anim_;
 
 	void Start()
 	{
-		noiseLevel_ = shootAudio_.minDistance;
 		anim_ = GetComponentInParent<Animator>();
-	}
+        gunAudio_ = GetComponent<AudioSource>();
+        gunAudio_.clip = shootClip_;
+        noiseLevel_ = gunAudio_.minDistance;
+    }
 
 	void Update()
 	{
@@ -53,7 +58,8 @@ public class SciFiRifle : MonoBehaviour
 		timer_ = timeBetweenShots_;
 		clipBullets_--;
 
-		shootAudio_.Play();
+        gunAudio_.clip = shootClip_;
+		gunAudio_.Play();
 
 		gunLight_.enabled = true;
 		canShoot_ = false;
@@ -67,7 +73,11 @@ public class SciFiRifle : MonoBehaviour
             return false;
         }
 		anim_.SetTrigger( "Reload" );
-		clipBullets_ = ( totalBullets_ < maxClipBullets_ ) ? totalBullets_ : maxClipBullets_;
+
+        gunAudio_.clip = reloadClip_;
+        gunAudio_.Play();
+
+        clipBullets_ = ( totalBullets_ < maxClipBullets_ ) ? totalBullets_ : maxClipBullets_;
 		totalBullets_ -= clipBullets_;
 		timer_ = reloadTime_;
 		canShoot_ = false;

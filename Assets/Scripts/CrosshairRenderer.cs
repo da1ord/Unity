@@ -24,15 +24,18 @@ public class CrosshairRenderer : MonoBehaviour
 
     void OnGUI()
     {
+        // Leaf size
+        float leafSize = 20;
         // Spread coefficient
-        float spread = PlayerShooting.aimSpread_;
+        float spread = PlayerShooting.aimSpread_ * leafSize;
+
         // Top leaf
-        topLeaf_.transform.position = new Vector3( topLeafPosition_.x, topLeafPosition_.y - 20 + ( 20 * spread ), topLeafPosition_.z );
+        topLeaf_.transform.position = new Vector3( topLeafPosition_.x, topLeafPosition_.y - leafSize + spread, topLeafPosition_.z );
         // Bottom leaf
-        bottomLeaf_.transform.position = new Vector3( bottomLeafPosition_.x, bottomLeafPosition_.y + 20 - ( 20 * spread ), bottomLeafPosition_.z );
+        bottomLeaf_.transform.position = new Vector3( bottomLeafPosition_.x, bottomLeafPosition_.y + leafSize - spread, bottomLeafPosition_.z );
         // Left leaf
-        leftLeaf_.transform.position = new Vector3( leftLeafPosition_.x + 20 - ( 20 * spread ), leftLeafPosition_.y, leftLeafPosition_.z );
+        leftLeaf_.transform.position = new Vector3( leftLeafPosition_.x + leafSize - spread, leftLeafPosition_.y, leftLeafPosition_.z );
         // Right leaf
-        rightLeaf_.transform.position = new Vector3( rightLeafPosition_.x - 20 + ( 20 * spread ), rightLeafPosition_.y, rightLeafPosition_.z );
+        rightLeaf_.transform.position = new Vector3( rightLeafPosition_.x - leafSize + spread, rightLeafPosition_.y, rightLeafPosition_.z );
     }
 }

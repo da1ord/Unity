@@ -11,8 +11,7 @@ public class PlayerShooting : MonoBehaviour
 
 	Ray shootRay_;
 	RaycastHit shootHit_;
-
-	LayerMask shootableMask_;
+    
 	PlayerControllerAnimated playerController_;
 
 	// TODO: Redo to IFace
@@ -21,10 +20,12 @@ public class PlayerShooting : MonoBehaviour
 
     public static float aimSpread_;
 
+    public AudioClip ammoPickUp_;
+
     // Init function
     void Awake() 
 	{
-		shootableMask_ = LayerMask.GetMask( "Shootable" );
+        shootRay_ = new Ray();
 		playerController_ = transform.root.GetComponent<PlayerControllerAnimated>();
 
 		activeGun_ = GetComponentInChildren<SciFiRifle>();
@@ -41,7 +42,10 @@ public class PlayerShooting : MonoBehaviour
         aimSpread_ = Mathf.Clamp( aimSpread_, 1.0f, 2.0f );
 
         /* Debug - render jittered shootRay */
+        // Player jitter
         //Vector3 jitter = Mathf.Pow( aimSpread_, 3 ) * Random.insideUnitSphere / 200.0f;
+        // Enemy jitter
+        //Vector3 jitter = Random.insideUnitSphere / 25.0f;
         //shootRay_.origin = playerCamera_.transform.position;
         //shootRay_.direction = playerCamera_.transform.forward + jitter;
         //Debug.DrawLine( shootRay_.origin, shootRay_.origin + shootRay_.direction * 100.0f );
@@ -64,13 +68,9 @@ public class PlayerShooting : MonoBehaviour
         shootRay_.origin = playerCamera_.transform.position;
         shootRay_.direction = playerCamera_.transform.forward + jitter;
 
-        // Enable gunline rendering
-        //		gunLine_.enabled = true;
-        //		gunLine_.SetPosition( 0, transform.position );
-
         // Hit enemy
         // TODO: Remove mask to test raycast against environment?
-        //		if( Physics.Raycast( shootRay_, out shootHit_, range_, shootableMask_ ) )
+        //if( Physics.Raycast( shootRay_, out shootHit_, range_, shootableMask_ ) )
         if( Physics.Raycast( shootRay_, out shootHit_, activeGun_.GetRange() ) )
 		{
 			if( shootHit_.collider.tag == "Enemy" )
@@ -93,16 +93,11 @@ public class PlayerShooting : MonoBehaviour
 //					Debug.Log( "Head" );
 				}
 			}
-
-//			gunLine_.startColor = Color.green;
-//			gunLine_.SetPosition( 1, shootHit_.point );
 		}
 		// Missed enemy
-		else
-		{
-//			gunLine_.startColor = Color.red;
-//			gunLine_.SetPosition( 1, shootRay_.origin + shootRay_.direction * range_ );
-		}
+		//else
+		//{
+		//}
 
 		playerController_.SetNoiseLevel( activeGun_.GetNoiseLevel() );
 	}
@@ -120,9 +115,10 @@ public class PlayerShooting : MonoBehaviour
 	{
         // Picking up ammo clip
 		if( other.gameObject.CompareTag( "Pick Up" ) )
-		{
-			other.gameObject.SetActive( false );
-			activeGun_.AddClip();
-		}
-	}
+        {
+            AudioSource.PlayClipAtPoint( ammoPickUp_, other.gameObject.transform.position );
+            activeGun_.AddClip();
+            Destroy( other.gameObject );
+        }
+    }
 }

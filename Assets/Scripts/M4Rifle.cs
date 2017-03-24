@@ -24,7 +24,7 @@ public class M4Rifle : MonoBehaviour
 	public AudioSource shootAudio_;
 	public Light gunLight_;
 	// Gun Animator instance
-//	Animator anim_;
+    //Animator anim_;
 
 	void Start()
 	{
