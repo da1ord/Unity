@@ -168,7 +168,7 @@ public class EnemyController : MonoBehaviour {
                                 /* Test */
                                 Vector3 jitter = Random.insideUnitSphere / 25.0f; // TODO: Change difficulty by altering jitter size
                                 shootRay_.origin = enemyPosition_;//playerCamera_.transform.position;
-                                shootRay_.direction = transform.forward + jitter;
+                                shootRay_.direction = playerDirection.normalized + jitter; /*transform.forward + jitter;*/
 
                                 // Hit player
                                 if( Physics.Raycast( shootRay_, out shootHit_, activeGun_.GetRange() ) )
@@ -182,7 +182,7 @@ public class EnemyController : MonoBehaviour {
                                             isPlayerAlive_ = !playerHealth.isDead_;
 
                                             // Hurt player
-                                            playerHealth.TakeDamage( 1 ); // activeGun_.GetDamagePerShot()
+                                            playerHealth.TakeDamage( 10 ); // activeGun_.GetDamagePerShot()
                                             Debug.DrawLine( shootRay_.origin, shootRay_.origin + shootRay_.direction * 100.0f );
                                         }
                                     }

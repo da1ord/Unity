@@ -18,6 +18,8 @@ public class EnemyHealth : MonoBehaviour
     public AudioClip hurtClip_;
     public AudioClip deathClip_;
 
+    ParticleSystem bloodSplash_;
+
     void Awake() 
 	{
 		rb_ = GetComponent<Rigidbody>();
@@ -25,21 +27,24 @@ public class EnemyHealth : MonoBehaviour
         anim_ = GetComponent<Animator>();
         walkAudio_ = GetComponents<AudioSource>()[0];
         speechAudio_ = GetComponents<AudioSource>()[1];
+        bloodSplash_ = GameObject.Find( "BloodSplash" ).GetComponent<ParticleSystem>();
     }
 	
 	void Update () 
 	{
-		
 	}
 
-	public void TakeDamage( int damage )
-	{
+	public void TakeDamage( int damage, Vector3 hitPoint )
+    {
         if( isDead_ )
         {
             return;
         }
 
 		health_ -= damage;
+
+        bloodSplash_.transform.position = hitPoint;
+        bloodSplash_.Play();
 
         speechAudio_.clip = hurtClip_;
         speechAudio_.Play();
@@ -77,7 +82,7 @@ public class EnemyHealth : MonoBehaviour
         // Spawn ammo clip
 		// Make sure the ammo clip spawns in the air and is oriented properly
 		Vector3 clipSpawnPosition = transform.position;
-		clipSpawnPosition.y = 1.0f;
+		clipSpawnPosition.y += 1.0f;
         Quaternion rotation = new Quaternion( 1, 0, 0, 0 );
 
         Instantiate( clip_, clipSpawnPosition, rotation );

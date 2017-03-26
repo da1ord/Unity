@@ -82,7 +82,7 @@ public class PlayerHealth : MonoBehaviour
 		damaged_ = true;
 
 		// Alive
-		if( health_ > 80 )
+		if( health_ - damage > 0 )
 		{
 			health_ -= damage;
 			healthSlider_.value = health_;
@@ -91,8 +91,12 @@ public class PlayerHealth : MonoBehaviour
 
 		}
 		// Dead
-		else 
-		{
+		else
+        {
+            health_ = 0;
+            healthSlider_.value = 0;
+            healthText_.text = health_.ToString();
+
             hurtAudio_.clip = deathClip_;
             hurtAudio_.Play();
 

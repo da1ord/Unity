@@ -29,12 +29,15 @@ public class SciFiRifle : MonoBehaviour
 	// Gun Animator instance
 	Animator anim_;
 
+    ParticleSystem muzzleFlash_;
+
 	void Start()
 	{
 		anim_ = GetComponentInParent<Animator>();
         gunAudio_ = GetComponent<AudioSource>();
         gunAudio_.clip = shootClip_;
         noiseLevel_ = gunAudio_.minDistance;
+        muzzleFlash_ = GetComponentInChildren<ParticleSystem>();
     }
 
 	void Update()
@@ -61,14 +64,22 @@ public class SciFiRifle : MonoBehaviour
         gunAudio_.clip = shootClip_;
 		gunAudio_.Play();
 
+        muzzleFlash_.Play();
+
 		gunLight_.enabled = true;
 		canShoot_ = false;
 	}
 
-	public bool Reload()
+    // Return if reload was successful (for aim spread reset)
+    public bool Reload()
 	{
+        // No bullets for reloading
+        if( totalBullets_ == 0 )
+        {
+            return false;
+        }
         // Either shoot or reload timer is active -> don't allow reloading
-        if( timer_ > 0 && canShoot_ == false )
+        if( timer_ > 0 /*&& canShoot_ == false*/ )
         {
             return false;
         }

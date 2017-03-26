@@ -78,7 +78,7 @@ public class PlayerShooting : MonoBehaviour
 				EnemyHealth enemyHealth = shootHit_.collider.GetComponent<EnemyHealth>();
 				if( enemyHealth != null )
 				{
-					enemyHealth.TakeDamage( activeGun_.GetDamagePerShot() );
+					enemyHealth.TakeDamage( activeGun_.GetDamagePerShot(), shootHit_.point );
 //					Debug.Log( activeGun_.GetDamagePerShot() );
 //					Debug.Log( "Enemy" );
 				}
@@ -88,7 +88,7 @@ public class PlayerShooting : MonoBehaviour
 				EnemyHealth enemyHealth = shootHit_.collider.GetComponentInParent<EnemyHealth>();
 				if( enemyHealth != null )
 				{
-					enemyHealth.TakeDamage( activeGun_.GetDamagePerShot() * 5 );
+					enemyHealth.TakeDamage( activeGun_.GetDamagePerShot() * 5, shootHit_.point );
 //					Debug.Log( activeGun_.GetDamagePerShot() );
 //					Debug.Log( "Head" );
 				}

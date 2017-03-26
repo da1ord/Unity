@@ -9,7 +9,7 @@ public class PlayerControllerAnimated : MonoBehaviour
 	//Player movement speed
 	public float movementSpeed_ = 5.0f;
 	// Mouse sensitivity value
-	public float mouseSensitivity_ = 3.0f;
+	public static float mouseSensitivity_ = 3.0f;
 	// Player camera instance
 	public Camera cam_;
 	// Player gun instance
@@ -56,11 +56,14 @@ public class PlayerControllerAnimated : MonoBehaviour
 	Vector3 gunPosition_;
 	float noiseLevel_ = 0.0f;
 
-	// Init function
-	void Start()
+    bool isMenuOpen_ = false;
+    GameObject menu_;
+
+    // Init function
+    void Start()
 	{
 		rb_ = GetComponent<Rigidbody>();
-		//		anim_ = GetComponentInChildren<Animator>();
+		//anim_ = GetComponentInChildren<Animator>();
 		walkAudio_ = GetComponents<AudioSource>()[0];
 		jumpAudio_ = GetComponents<AudioSource>()[1];
 		gunsPivot_ = GameObject.Find( "Guns" );
@@ -80,12 +83,15 @@ public class PlayerControllerAnimated : MonoBehaviour
 		Cursor.lockState = CursorLockMode.Locked;
 
 		gunPosition_ = gun_.transform.position;
-}
+
+        menu_ = GameObject.Find( "Menu" );
+        menu_.SetActive( isMenuOpen_ );
+    }
 
 	// Update function that runs before every frame rendering?
 	void Update ()
-	{
-		ProcessKeyboardInput();
+    {
+        ProcessKeyboardInput();
 	}
 
 	// Update function that runs when physics is calculated?
@@ -137,11 +143,12 @@ public class PlayerControllerAnimated : MonoBehaviour
 		// Limit maximum angle from -90(looking down) to 90(looking up) degrees
 		xRot_ = Mathf.Clamp( xRot_, -90.0f, 90.0f );
 
-		// Rotate just the camera along X-axis
-		//cam_.transform.localEulerAngles = new Vector3( -xRot_, 0.0f, 0.0f );
+        // Rotate just the camera along X-axis
+        //cam_.transform.localEulerAngles = new Vector3( -xRot_, 0.0f, 0.0f );
 
-		// Rotate gun around pivot point
-		gunsPivot_.transform.localEulerAngles = new Vector3( -xRot_, 0.0f, 0.0f );
+        // Rotate gun around pivot point and add recoil
+        float recoil = PlayerShooting.aimSpread_ * 10;
+        gunsPivot_.transform.localEulerAngles = new Vector3( -xRot_ - recoil, 0.0f, 0.0f );
 
 		// Check if the player is moving - play sound
 		if( isMoving_ && isGrounded_ )
@@ -167,10 +174,20 @@ public class PlayerControllerAnimated : MonoBehaviour
 	// Processes keyboard input except from player movement
 	void ProcessKeyboardInput()
 	{
-		// Lock/unlock mouse cursor
-		if( Input.GetKeyUp( KeyCode.F8 ) ) 
-		{
-			if( Cursor.lockState == CursorLockMode.Locked )
+        // Show/hide settings
+        //if( Input.GetKeyUp( KeyCode.Escape ) )
+        //{
+        //    isMenuOpen_ = !isMenuOpen_;
+        //    menu_.SetActive( isMenuOpen_ );
+        //}
+        
+        // Lock/unlock mouse cursor
+		if( Input.GetKeyUp( KeyCode.F8 ) )
+        {
+            isMenuOpen_ = !isMenuOpen_;
+            menu_.SetActive( isMenuOpen_ );
+
+            if( Cursor.lockState == CursorLockMode.Locked )
 			{
 				Cursor.visible = true;
 				Cursor.lockState = CursorLockMode.None;
