@@ -60,6 +60,8 @@ public class PlayerControllerAnimated : MonoBehaviour
 
     bool isMenuOpen_ = false;
     Canvas menuCanvas_;
+    Canvas mapCanvas_;
+    Canvas crosshairCanvas_;
 
     // Init function
     void Start()
@@ -86,9 +88,10 @@ public class PlayerControllerAnimated : MonoBehaviour
 		Cursor.lockState = CursorLockMode.Locked;
 
 		gunPosition_ = gun_.transform.position;
-        
+
         menuCanvas_ = GameObject.Find( "Menu" ).GetComponent<Canvas>();
-        menuCanvas_.enabled = isMenuOpen_;
+        mapCanvas_ = GameObject.Find( "Map" ).GetComponent<Canvas>();
+        crosshairCanvas_ = GameObject.Find( "DynamicCrosshair" ).GetComponent<Canvas>();
     }
 
 	// Update function that runs before every frame rendering?
@@ -180,15 +183,19 @@ public class PlayerControllerAnimated : MonoBehaviour
 	// Processes keyboard input except from player movement
 	void ProcessKeyboardInput()
 	{
-        // Show/hide settings
-        //if( Input.GetKeyUp( KeyCode.Escape ) )
-        //{
-        //    isMenuOpen_ = !isMenuOpen_;
-        //    menu_.SetActive( isMenuOpen_ );
-        //}
-        
+        // Show map
+        if( Input.GetKeyDown( KeyCode.Tab ) )
+        {
+            mapCanvas_.enabled = true;
+        }
+        // Hide map
+        if( Input.GetKeyUp( KeyCode.Tab ) )
+        {
+            mapCanvas_.enabled = false;
+        }
+
         // Lock/unlock mouse cursor
-		if( Input.GetKeyUp( KeyCode.F8 ) )
+        if( Input.GetKeyUp( KeyCode.F8 ) )
         {
             isMenuOpen_ = !isMenuOpen_;
             menuCanvas_.enabled = isMenuOpen_;
@@ -203,10 +210,21 @@ public class PlayerControllerAnimated : MonoBehaviour
 				Cursor.visible = false;
 				Cursor.lockState = CursorLockMode.Locked;
 			}
-		}
+        }
 
-		// Shoot - LMB
-		if( Input.GetMouseButton( 0 ) )
+        // Pause the game if the menu is open
+        if( isMenuOpen_ )
+        {
+            Time.timeScale = 0;
+            return;
+        }
+        else
+        {
+            Time.timeScale = 1.0f;
+        }
+
+        // Shoot - LMB
+        if( Input.GetMouseButton( 0 ) )
 		{
 			shooting_.Shoot();
 		}
@@ -214,15 +232,19 @@ public class PlayerControllerAnimated : MonoBehaviour
 		// Enter scope mode - RMB
 		if( Input.GetMouseButtonDown( 1 ) )
 		{
+            crosshairCanvas_.enabled = false;
+
 			gunPosition_ = gun_.transform.localPosition;
 			gun_.transform.position = cam_.transform.position;
-			gun_.transform.localPosition += new Vector3( -0.003f, -0.108f, 0.2f );/*new Vector3( -0.006f, -0.11f, 0.2f );*/
+			gun_.transform.localPosition += new Vector3( -0.003f, -0.108f, 0.2f );
 			cam_.fieldOfView /= 2.0f;
 		}
 		// Exit scope mode
 		else if( Input.GetMouseButtonUp( 1 ) )
-		{
-			gun_.transform.localPosition = gunPosition_;
+        {
+            crosshairCanvas_.enabled = true;
+
+            gun_.transform.localPosition = gunPosition_;
 			cam_.fieldOfView *= 2.0f;
 		}
 
