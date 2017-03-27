@@ -23,7 +23,7 @@ public class PlayerControllerAnimated : MonoBehaviour
 	// Fall audio clip
 	public AudioClip fallClip_;
 
-	public Vector3 startPosition_ = new Vector3( 0.1f, 0.9f, 0.1f );
+	//public Vector3 startPosition_ = new Vector3( 0.1f, 0.9f, 0.1f );
 
 	// Pivot point along which the guns rotate (for looking around X-axis)
 	GameObject gunsPivot_;
@@ -38,10 +38,12 @@ public class PlayerControllerAnimated : MonoBehaviour
 
 	Animator anim_;
 
-	// Player shooting script
-	PlayerShooting shooting_;
+    // Player shooting script
+    PlayerShooting shooting_;
 
-	CapsuleCollider capsule_;
+    PlayerHealth health_;
+
+    CapsuleCollider capsule_;
 
 	public Vector3 playerPosition_;
 
@@ -57,7 +59,7 @@ public class PlayerControllerAnimated : MonoBehaviour
 	float noiseLevel_ = 0.0f;
 
     bool isMenuOpen_ = false;
-    GameObject menu_;
+    Canvas menuCanvas_;
 
     // Init function
     void Start()
@@ -67,15 +69,16 @@ public class PlayerControllerAnimated : MonoBehaviour
 		walkAudio_ = GetComponents<AudioSource>()[0];
 		jumpAudio_ = GetComponents<AudioSource>()[1];
 		gunsPivot_ = GameObject.Find( "Guns" );
-		shooting_ = GetComponentInChildren<PlayerShooting>();
+        shooting_ = GetComponentInChildren<PlayerShooting>();
+        health_ = GetComponentInChildren<PlayerHealth>();
 
-		capsule_ = GetComponent<CapsuleCollider>();
+        capsule_ = GetComponent<CapsuleCollider>();
 
 		anim_ = GetComponent<Animator>();
 		anim_.SetFloat( "Forward", 0.0f );
 
 		// Avoid playing of walk sound
-		rb_.MovePosition( startPosition_ );
+		//rb_.MovePosition( startPosition_ );
 
 		// Hide mouse cursor
 		Cursor.visible = false;
@@ -83,15 +86,18 @@ public class PlayerControllerAnimated : MonoBehaviour
 		Cursor.lockState = CursorLockMode.Locked;
 
 		gunPosition_ = gun_.transform.position;
-
-        menu_ = GameObject.Find( "Menu" );
-        menu_.SetActive( isMenuOpen_ );
+        
+        menuCanvas_ = GameObject.Find( "Menu" ).GetComponent<Canvas>();
+        menuCanvas_.enabled = isMenuOpen_;
     }
 
 	// Update function that runs before every frame rendering?
 	void Update ()
     {
-        ProcessKeyboardInput();
+        if( !health_.isDead_ )
+        {
+            ProcessKeyboardInput();
+        }
 	}
 
 	// Update function that runs when physics is calculated?
@@ -185,7 +191,7 @@ public class PlayerControllerAnimated : MonoBehaviour
 		if( Input.GetKeyUp( KeyCode.F8 ) )
         {
             isMenuOpen_ = !isMenuOpen_;
-            menu_.SetActive( isMenuOpen_ );
+            menuCanvas_.enabled = isMenuOpen_;
 
             if( Cursor.lockState == CursorLockMode.Locked )
 			{
