@@ -159,16 +159,16 @@ public class EnemyController : MonoBehaviour {
                             Vector3 rotation = playerDirection.normalized;
                             Quaternion lookRotation = Quaternion.LookRotation( new Vector3( rotation.x, 0, rotation.z ) );
                             transform.rotation = Quaternion.Slerp( transform.rotation, lookRotation, Time.deltaTime * 5.0f );
-
-                            //enemyShooting_.Shoot();
+                            
                             // Can shoot at this moment (shoot-enable timer elapsed) and clip is not empty
                             if( activeGun_.CanShoot() )
                             {
                                 activeGun_.Shoot();
-                                /* Test */
+                                
+                                // Add jitter to the shootRay
                                 Vector3 jitter = Random.insideUnitSphere / 25.0f; // TODO: Change difficulty by altering jitter size
-                                shootRay_.origin = enemyPosition_;//playerCamera_.transform.position;
-                                shootRay_.direction = playerDirection.normalized + jitter; /*transform.forward + jitter;*/
+                                shootRay_.origin = enemyPosition_;
+                                shootRay_.direction = playerDirection.normalized + jitter;
 
                                 // Hit player
                                 if( Physics.Raycast( shootRay_, out shootHit_, activeGun_.GetRange() ) )
@@ -187,7 +187,6 @@ public class EnemyController : MonoBehaviour {
                                         }
                                     }
                                 }
-                                /* Test */
                                 Debug.DrawRay( transform.position, transform.forward * sightDistance_, Color.green );
                             }
 
@@ -204,10 +203,6 @@ public class EnemyController : MonoBehaviour {
                             if( playerDistance_ < minShootRange_ )
                             {
                                 nav_.enabled = false;
-
-                                //Vector3 rotation = playerDirection.normalized;
-                                //Quaternion lookRotation = Quaternion.LookRotation( new Vector3( rotation.x, 0, rotation.z ) );
-                                //transform.rotation = Quaternion.Slerp( transform.rotation, lookRotation, Time.deltaTime * 5.0f );
                             }
                         }
                     }
@@ -337,7 +332,6 @@ public class EnemyController : MonoBehaviour {
                         seekingTimer_ -= Time.deltaTime;
 
                         // Seek for Player - rotate around
-                        //float randomDir = Random.Range( -30.0f, 30.0f );
                         transform.Rotate( transform.up, 2.0f );
                     }
                     // Seeking done
@@ -376,32 +370,6 @@ public class EnemyController : MonoBehaviour {
 			{
 				walkAudio_.Stop();
 			}
-
-			// TODO: Refactor!
-			//// Check destination remaining distance
-			//if( nav_.remainingDistance < 1.5f )
-			//{
-			//	if( enemyState_ == EnemyState.Patrolling )
-			//	{
-			//		GoToNextPoint();
-			//	}
-			//	else if( enemyState_ == EnemyState.Distracted )
-			//	{
-			//		// Clear distraction point
-			//		distractionPoint_ = NO_DISTRACTION_SET;
-
-			//		// Set seeking state
-			//		enemyState_ = EnemyState.Seeking;
-			//	}
-			//	// TODO: && Seeking?
-			//	else if( seekingTimer_ == 5.0f )
-			//	{
-			//		// Set patrolling state
-			//		enemyState_ = EnemyState.Patrolling;
-
-			//		GoToActualPoint();
-			//	}
-			//}
 
 			lastEnemyState_ = enemyState_;
 		}

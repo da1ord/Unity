@@ -105,22 +105,16 @@ public class PlayerHealth : MonoBehaviour
 
 	}
 
-	IEnumerator Death()
-	{
+    IEnumerator Death()
+    {
 		// Set dead state
 		isDead_ = true;
 
-        // TODO: death animation
-
         // Unfreeze rotation to be able to fall
         rb_.freezeRotation = false;
-		// Apply force to fall
-		rb_.AddForceAtPosition( new Vector3( 10.0f, 0.0f, 0.0f ), transform.position + new Vector3( 0.0f, 0.5f, 0.0f ) );
+        // Apply force to fall
+        rb_.AddForceAtPosition( new Vector3( 2.0f, -0.5f, 0.0f ), transform.position + new Vector3( 0.0f, 1.0f, 0.0f ), ForceMode.Impulse );
         // Wait until fall is finished
         yield return new WaitForSeconds( 2 );
-        
-		// disable movement
-
-        // TODO: Respawn?
 	}
 }

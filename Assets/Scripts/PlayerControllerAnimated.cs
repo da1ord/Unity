@@ -23,20 +23,16 @@ public class PlayerControllerAnimated : MonoBehaviour
 	// Fall audio clip
 	public AudioClip fallClip_;
 
-	//public Vector3 startPosition_ = new Vector3( 0.1f, 0.9f, 0.1f );
-
 	// Pivot point along which the guns rotate (for looking around X-axis)
 	GameObject gunsPivot_;
 	// Player RigidBody instance
 	Rigidbody rb_;
-	// Player Animator instance
-	//	Animator anim_;
-	// Walk audio source
-	AudioSource walkAudio_;
+    // Player Animator instance
+    Animator anim_;
+    // Walk audio source
+    AudioSource walkAudio_;
 	// Walk audio source
 	AudioSource jumpAudio_;
-
-	Animator anim_;
 
     // Player shooting script
     PlayerShooting shooting_;
@@ -67,7 +63,6 @@ public class PlayerControllerAnimated : MonoBehaviour
     void Start()
 	{
 		rb_ = GetComponent<Rigidbody>();
-		//anim_ = GetComponentInChildren<Animator>();
 		walkAudio_ = GetComponents<AudioSource>()[0];
 		jumpAudio_ = GetComponents<AudioSource>()[1];
 		gunsPivot_ = GameObject.Find( "Guns" );
@@ -78,9 +73,6 @@ public class PlayerControllerAnimated : MonoBehaviour
 
 		anim_ = GetComponent<Animator>();
 		anim_.SetFloat( "Forward", 0.0f );
-
-		// Avoid playing of walk sound
-		//rb_.MovePosition( startPosition_ );
 
 		// Hide mouse cursor
 		Cursor.visible = false;
@@ -103,12 +95,15 @@ public class PlayerControllerAnimated : MonoBehaviour
         }
 	}
 
-	// Update function that runs when physics is calculated?
-	void FixedUpdate () 
-	{
-		playerPosition_ = capsule_.bounds.center;
-		PlayerMovement();
-	}
+    // Update function that runs when physics is calculated?
+    void FixedUpdate()
+    {
+        if( !health_.isDead_ )
+        {
+            playerPosition_ = capsule_.bounds.center;
+            PlayerMovement();
+        }
+    }
 
 	// Processes player movement
 	void PlayerMovement()
@@ -121,9 +116,9 @@ public class PlayerControllerAnimated : MonoBehaviour
 		// Calculate movement vector
 		Vector3 moveH = transform.right * axisH;
 		Vector3 moveV = transform.forward * axisV;
-		Vector3 movement = ( moveH + moveV ).normalized * movementSpeed_;
+        Vector3 movement = ( moveH + moveV ).normalized * movementSpeed_;
 
-		if( !jumpAudio_.isPlaying )
+        if( !jumpAudio_.isPlaying )
 		{
 			jumpAudio_.minDistance = 0;
 			jumpAudio_.maxDistance = 0;
@@ -151,9 +146,6 @@ public class PlayerControllerAnimated : MonoBehaviour
 		xRot_ += Input.GetAxisRaw( "Mouse Y" ) * mouseSensitivity_;
 		// Limit maximum angle from -90(looking down) to 90(looking up) degrees
 		xRot_ = Mathf.Clamp( xRot_, -90.0f, 90.0f );
-
-        // Rotate just the camera along X-axis
-        //cam_.transform.localEulerAngles = new Vector3( -xRot_, 0.0f, 0.0f );
 
         // Rotate gun around pivot point and add recoil
         float recoil = PlayerShooting.aimSpread_ * 10;
@@ -279,11 +271,8 @@ public class PlayerControllerAnimated : MonoBehaviour
 				isCrouching_ = true;
 				capsule_.height /= 2.0f;
 				capsule_.center /= 2.0f;
-				//cam_.transform.localPosition -= new Vector3( 0.0f, 0.6f, -0.2f );
 				gunsPivot_.transform.localPosition -= new Vector3( 0.0f, 0.65f, -0.2f );
 			}
-//			transform.localScale = new Vector3( transform.localScale.x, 0.5f, transform.localScale.z );
-//			transform.localPosition -= new Vector3( 0.0f, 0.4f, 0.0f );
 		}
 		// Stand up
 		if( Input.GetKeyUp( KeyCode.LeftControl ) )
@@ -293,14 +282,11 @@ public class PlayerControllerAnimated : MonoBehaviour
 				isCrouching_ = false;
 				capsule_.height *= 2.0f;
 				capsule_.center *= 2.0f;
-				//cam_.transform.localPosition += new Vector3( 0.0f, 0.6f, -0.2f );
 				gunsPivot_.transform.localPosition += new Vector3( 0.0f, 0.65f, -0.2f );
 			}
-//			transform.localScale = new Vector3( transform.localScale.x, 1.0f, transform.localScale.z );
-//			transform.localPosition += new Vector3( 0.0f, 0.4f, 0.0f );
 		}
 
-		if( Physics.Raycast( playerPosition_, -Vector3.up, 1.0f ) )/*transform.position*/
+		if( Physics.Raycast( playerPosition_, -Vector3.up, 1.0f ) )
 		{
 			// Check if the player just reached the ground
 			if( isGrounded_ == false )
@@ -337,7 +323,6 @@ public class PlayerControllerAnimated : MonoBehaviour
 			anim_.SetFloat( "Forward", 0.0f );
 		}
 		anim_.SetBool( "Crouch", isCrouching_ );
-		//anim_.SetBool( "OnGround", isGrounded_ );
 	}
 
 	public void SetNoiseLevel( float level )

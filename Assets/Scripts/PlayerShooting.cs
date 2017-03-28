@@ -13,8 +13,7 @@ public class PlayerShooting : MonoBehaviour
 	RaycastHit shootHit_;
     
 	PlayerControllerAnimated playerController_;
-
-	// TODO: Redo to IFace
+    
 	// Player's active gun
 	SciFiRifle activeGun_;
 
@@ -69,8 +68,6 @@ public class PlayerShooting : MonoBehaviour
         shootRay_.direction = playerCamera_.transform.forward + jitter;
 
         // Hit enemy
-        // TODO: Remove mask to test raycast against environment?
-        //if( Physics.Raycast( shootRay_, out shootHit_, range_, shootableMask_ ) )
         if( Physics.Raycast( shootRay_, out shootHit_, activeGun_.GetRange() ) )
 		{
 			if( shootHit_.collider.tag == "Enemy" )
@@ -79,8 +76,6 @@ public class PlayerShooting : MonoBehaviour
 				if( enemyHealth != null )
 				{
 					enemyHealth.TakeDamage( activeGun_.GetDamagePerShot(), shootHit_.point );
-//					Debug.Log( activeGun_.GetDamagePerShot() );
-//					Debug.Log( "Enemy" );
 				}
 			}
 			else if( shootHit_.collider.tag == "EnemyHead" )
@@ -89,15 +84,9 @@ public class PlayerShooting : MonoBehaviour
 				if( enemyHealth != null )
 				{
 					enemyHealth.TakeDamage( activeGun_.GetDamagePerShot() * 5, shootHit_.point );
-//					Debug.Log( activeGun_.GetDamagePerShot() );
-//					Debug.Log( "Head" );
 				}
 			}
 		}
-		// Missed enemy
-		//else
-		//{
-		//}
 
 		playerController_.SetNoiseLevel( activeGun_.GetNoiseLevel() );
 	}

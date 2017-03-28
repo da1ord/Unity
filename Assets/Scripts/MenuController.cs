@@ -10,20 +10,24 @@ public class MenuController : MonoBehaviour
 
     void Start()
     {
+        // Add volume slider onValueChanged listener
         volumeSlider_.onValueChanged.AddListener( delegate {
             volumeSliderChanged();
         } );
 
+        // Add mouse sensitivity slider onValueChanged listener
         mouseSensitivitySlider_.onValueChanged.AddListener( delegate {
             mouseSensitivitySliderChanged();
         } );
     }
 
+    // Change master volume to the volume slider value
     void volumeSliderChanged()
     {
         AudioListener.volume = volumeSlider_.value;
     }
 
+    // Change mouse sensitivity to the mouse sensitivity slider value
     void mouseSensitivitySliderChanged()
     {
         PlayerControllerAnimated.mouseSensitivity_ = mouseSensitivitySlider_.value;

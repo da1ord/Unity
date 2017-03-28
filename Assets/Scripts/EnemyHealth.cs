@@ -66,7 +66,7 @@ public class EnemyHealth : MonoBehaviour
         speechAudio_.clip = deathClip_;
         speechAudio_.Play();
 
-        // Stop navMeshAgent and current animation 
+        // Stop navMeshAgent and current animation
         anim_.Stop();
         if( nav_.enabled )
         {

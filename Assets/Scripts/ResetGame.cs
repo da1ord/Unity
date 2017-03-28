@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 
 public class ResetGame : MonoBehaviour
 {
+    // Resets the game
 	public void ResetScene()
     {
         SceneManager.LoadScene( "Shooter" );
