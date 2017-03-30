@@ -11,8 +11,9 @@ public class PlayerShooting : MonoBehaviour
 
 	Ray shootRay_;
 	RaycastHit shootHit_;
-    
-	PlayerControllerAnimated playerController_;
+    public LayerMask shootMask_;
+
+    PlayerControllerAnimated playerController_;
     
 	// Player's active gun
 	SciFiRifle activeGun_;
@@ -68,7 +69,7 @@ public class PlayerShooting : MonoBehaviour
         shootRay_.direction = playerCamera_.transform.forward + jitter;
 
         // Hit enemy
-        if( Physics.Raycast( shootRay_, out shootHit_, activeGun_.GetRange() ) )
+        if( Physics.Raycast( shootRay_, out shootHit_, activeGun_.GetRange(), shootMask_ ) )
 		{
 			if( shootHit_.collider.tag == "Enemy" )
 			{

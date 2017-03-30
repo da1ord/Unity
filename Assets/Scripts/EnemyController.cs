@@ -34,6 +34,8 @@ public class EnemyController : MonoBehaviour {
     // Player lost (seeking start) audio clip
     public AudioClip playerLostClip_;
 
+    float rotationSpeed_ = 1.5f;
+
     Ray shootRay_;
     RaycastHit shootHit_;
     Vector3 gunOffset_ = new Vector3( 0.0f, 0.5f, 0.0f );
@@ -127,7 +129,7 @@ public class EnemyController : MonoBehaviour {
             playerDetected_ = false;
 
             // TODO: Refactor
-            // Player is in enemy sight
+            // Player is in enemy sight distance
             if( playerDistance_ < sightDistance_ && isPlayerAlive_ )
             {
                 float angleToPlayer = Vector3.Angle( playerDirection, transform.forward );
@@ -156,9 +158,9 @@ public class EnemyController : MonoBehaviour {
                         if( playerDistance_ < maxShootRange_ )
                         {
                             // Rotate to the player
-                            Vector3 rotation = playerDirection.normalized;
-                            Quaternion lookRotation = Quaternion.LookRotation( new Vector3( rotation.x, 0, rotation.z ) );
-                            transform.rotation = Quaternion.Slerp( transform.rotation, lookRotation, Time.deltaTime * 5.0f );
+                            //Vector3 rotation = playerDirection.normalized;
+                            //Quaternion lookRotation = Quaternion.LookRotation( new Vector3( rotation.x, 0, rotation.z ) );
+                            //transform.rotation = Quaternion.Slerp( transform.rotation, lookRotation, Time.deltaTime * 5.0f );
                             
                             // Can shoot at this moment (shoot-enable timer elapsed) and clip is not empty
                             if( activeGun_.CanShoot() )
@@ -295,6 +297,9 @@ public class EnemyController : MonoBehaviour {
 
                     // Go to the distraction point
                     nav_.SetDestination( distractionPoint_ );
+
+                    // Set enemy rotation speed
+                    rotationSpeed_ = 1.5f;
                     break;
                 }
                 case EnemyState.Following:
@@ -315,6 +320,9 @@ public class EnemyController : MonoBehaviour {
                     // Follow the player
                     nav_.SetDestination( player_.position );
                     Debug.DrawRay( transform.position, transform.up * 5.0f, Color.yellow );
+                    
+                    // Set enemy rotation speed
+                    rotationSpeed_ = 4.0f;
                     break;
                 }
                 case EnemyState.Seeking:
@@ -371,7 +379,25 @@ public class EnemyController : MonoBehaviour {
 				walkAudio_.Stop();
 			}
 
-			lastEnemyState_ = enemyState_;
+            // Disable updating of rotation when leaving Patrolling state
+            if( lastEnemyState_ == EnemyState.Patrolling && enemyState_ != EnemyState.Patrolling )
+            {
+                nav_.updateRotation = false;
+            }
+            // Enable updating of rotation when entering Patrolling state
+            if( lastEnemyState_ != EnemyState.Patrolling && enemyState_ == EnemyState.Patrolling )
+            {
+                nav_.updateRotation = true;
+            }
+            // Rotate quicker when navMeshAgent rotation update is disabled 
+            if( nav_.updateRotation == false )
+            {
+                Vector3 rotation = playerDirection.normalized;
+                Quaternion lookRotation = Quaternion.LookRotation( new Vector3( rotation.x, 0, rotation.z ) );
+                transform.rotation = Quaternion.Slerp( transform.rotation, lookRotation, Time.deltaTime * rotationSpeed_ );
+            }
+
+            lastEnemyState_ = enemyState_;
 		}
 		else
 		{

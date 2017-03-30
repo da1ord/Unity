@@ -34,29 +34,32 @@ public class EnemyHealth : MonoBehaviour
 	{
 	}
 
-	public void TakeDamage( int damage, Vector3 hitPoint )
+    public void TakeDamage( int damage, Vector3 hitPoint )
     {
         if( isDead_ )
         {
             return;
         }
 
-		health_ -= damage;
+        health_ -= damage;
 
-        bloodSplash_.transform.position = hitPoint;
-        bloodSplash_.Play();
+        if( bloodSplash_ != null )
+        {
+           bloodSplash_.transform.position = hitPoint;
+            bloodSplash_.Play();
+        }
 
         speechAudio_.clip = hurtClip_;
         speechAudio_.Play();
 
 		if( health_ <= 0 )
-		{
-			StartCoroutine( Death() );
-		}
+        {
+            Death();
+        }
 
 	}
-
-	IEnumerator Death()
+    
+	void Death()
 	{
         // Set dead state
         isDead_ = true;
@@ -76,8 +79,6 @@ public class EnemyHealth : MonoBehaviour
         rb_.freezeRotation = false;
 		// Apply force to fall
 		rb_.AddForceAtPosition( new Vector3( 2.0f, -0.5f, 0.0f ), transform.position + new Vector3( 0.0f, 1.0f, 0.0f ), ForceMode.Impulse );
-		// Wait until fall is finished
-		yield return new WaitForSeconds( 1 );
 
         // Spawn ammo clip
 		// Make sure the ammo clip spawns in the air and is oriented properly
@@ -87,6 +88,6 @@ public class EnemyHealth : MonoBehaviour
 
         Instantiate( clip_, clipSpawnPosition, rotation );
 
-		Destroy( gameObject );
+		Destroy( gameObject, 1.0f );
 	}
 }
