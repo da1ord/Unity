@@ -57,7 +57,7 @@ public class PlayerHealth : MonoBehaviour
         restartText_ =  GameObject.Find( "RestartText" ).GetComponent<Text>();
         // Get death image component
         deathImage_ = GameObject.Find( "DeathImage" ).GetComponent<Image>();
-        // Get hurt sudio source component
+        // Get hurt audio source component
         hurtAudio_ = GetComponents<AudioSource>()[2];
     }
 
