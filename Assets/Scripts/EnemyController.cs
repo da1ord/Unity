@@ -72,7 +72,7 @@ public class EnemyController : MonoBehaviour {
 	static Vector3 NO_DISTRACTION_SET = new Vector3( 1000.0f, 1000.0f, 1000.0f );
 	Vector3 distractionPoint_;
 
-	void Awake()  // Start
+	void Start()  // Start
 	{
 		player_ = GameObject.FindGameObjectWithTag( "Player" ).transform;
 		nav_ = GetComponent<NavMeshAgent>();

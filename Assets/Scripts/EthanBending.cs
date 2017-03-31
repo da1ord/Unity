@@ -2,18 +2,22 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class EthanBending : MonoBehaviour 
+public class EthanBending : MonoBehaviour
 {
-	PlayerControllerAnimated playerController;
+    // Player controller script
+    PlayerControllerAnimated playerController;
 
-	void Start()
-	{
-		playerController = GetComponentInParent<PlayerControllerAnimated>();
+    // Init function
+    void Start()
+    {
+        // Get player controller script component
+        playerController = GetComponentInParent<PlayerControllerAnimated>();
 	}
 
-	void LateUpdate() 
-	{
-//		transform.localEulerAngles = new Vector3( -20.0f, 0.0f, -playerController.xRot_ );
-		transform.localEulerAngles = new Vector3( 0.0f, 0.0f, -playerController.xRot_ );
+    // Late update function
+    void LateUpdate()
+    {
+        // Compensate the torso rotation
+        transform.localEulerAngles = new Vector3( 0.0f, 0.0f, -playerController.xRot_ );
 	}
 }

@@ -23,14 +23,20 @@ public class CrosshairRenderer : MonoBehaviour
     // Right leaf image position
     Vector3 rightLeafPosition_;
 
+    // Init function
     void Start()
     {
+        // Get top leaf position
         topLeafPosition_ = topLeaf_.transform.position;
+        // Get bottom leaf position
         bottomLeafPosition_ = bottomLeaf_.transform.position;
+        // Get left leaf position
         leftLeafPosition_ = leftLeaf_.transform.position;
+        // Get right leaf position
         rightLeafPosition_ = rightLeaf_.transform.position;
     }
 
+    // On GUI draw function
     void OnGUI()
     {
         // Leaf size

@@ -29,10 +29,6 @@ public class EnemyHealth : MonoBehaviour
         speechAudio_ = GetComponents<AudioSource>()[1];
         bloodSplash_ = GameObject.Find( "BloodSplash" ).GetComponent<ParticleSystem>();
     }
-	
-	void Update () 
-	{
-	}
 
     public void TakeDamage( int damage, Vector3 hitPoint )
     {
@@ -43,11 +39,14 @@ public class EnemyHealth : MonoBehaviour
 
         health_ -= damage;
 
-        if( bloodSplash_ != null )
+        // Happens that the particle system throws a NullReference exception
+        if( bloodSplash_ == null )
         {
-           bloodSplash_.transform.position = hitPoint;
-            bloodSplash_.Play();
+            bloodSplash_ = GameObject.Find( "BloodSplash" ).GetComponent<ParticleSystem>();
         }
+
+        bloodSplash_.transform.position = hitPoint;
+        bloodSplash_.Play();
 
         speechAudio_.clip = hurtClip_;
         speechAudio_.Play();

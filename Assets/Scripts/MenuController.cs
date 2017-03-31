@@ -5,9 +5,12 @@ using UnityEngine.UI;
 
 public class MenuController : MonoBehaviour
 {
+    // Master volume slider
     public Slider volumeSlider_;
+    // Mouse sensitivity slider
     public Slider mouseSensitivitySlider_;
 
+    // Init function
     void Start()
     {
         // Add volume slider onValueChanged listener
