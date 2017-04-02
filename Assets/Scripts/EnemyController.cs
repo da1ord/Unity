@@ -83,9 +83,11 @@ public class EnemyController : MonoBehaviour
     float maxShootRange_;
     // Timer for enemy seeking state
     float seekingTimer_ = 5.0f;
+    // Timer for enemy seeking state
+    const float initSeekingTimerValue_ = 5.0f;
 
     // Enemy patrolling path
-	Vector3[] path_ = new []{ new Vector3( -20.0f, 1.0f, 20.0f ), 
+    Vector3[] path_ = new []{ new Vector3( -20.0f, 1.0f, 20.0f ), 
 							  new Vector3( -20.0f, 1.0f, -20.0f ), 
 							  new Vector3( 29.0f, 1.0f, -29.0f ),
 							  new Vector3( 20.0f, 1.0f, 20.0f )};
@@ -234,7 +236,7 @@ public class EnemyController : MonoBehaviour
                 PlayerNotInSight();
             }
 
-            Debug.Log( enemyState_ );
+            //Debug.Log( enemyState_ );
             switch( enemyState_ )
             {
                 case EnemyState.Patrolling:
@@ -270,8 +272,8 @@ public class EnemyController : MonoBehaviour
                         // Set animator distracted speed
                         anim_.SetFloat( "Speed", distractedSpeed_ );
 
-                        // Set enemy rotation speed
-                        rotationSpeed_ = 1.5f;
+                        // Set enemy rotation speed to walk speed value
+                        rotationSpeed_ = walkSpeed_;
 
                         // Set distraction point and break out of this case block
                         nav_.SetDestination( distractionPoint_ );
@@ -304,8 +306,8 @@ public class EnemyController : MonoBehaviour
                         speechAudio_.clip = playerDetectedClip_;
                         speechAudio_.Play();
 
-                        // Set enemy rotation speed
-                        rotationSpeed_ = 4.0f;
+                        // Set enemy rotation speed to rush speed value
+                        rotationSpeed_ = rushSpeed_;
                     }
 
                     // Check if nav mesh agent is disabled == enemy is just shooting
@@ -347,7 +349,7 @@ public class EnemyController : MonoBehaviour
                     //Debug.Log( seekingTimer_ );
                     //Debug.Log( enemyPosition_ );
                     // Seeking just started
-                    if( lastEnemyState_ != enemyState_ )
+                    if( seekingTimer_ == initSeekingTimerValue_ )
                     {
                         // Play player lost audio
                         speechAudio_.clip = playerLostClip_;
@@ -365,8 +367,8 @@ public class EnemyController : MonoBehaviour
                     // Seeking done
                     else
                     {
-                        // Reset seek timer
-                        seekingTimer_ = 5.0f;
+                        // Reset seeking timer
+                        seekingTimer_ = initSeekingTimerValue_;
 
                         // Set patrolling state
                         enemyState_ = EnemyState.Patrolling;
@@ -423,7 +425,7 @@ public class EnemyController : MonoBehaviour
             if( lastEnemyState_ == EnemyState.Seeking && enemyState_ != EnemyState.Seeking )
             {
                 // Reset seek timer
-                seekingTimer_ = 5.0f;
+                seekingTimer_ = initSeekingTimerValue_;
             }
             // Update last enemy state
             lastEnemyState_ = enemyState_;
