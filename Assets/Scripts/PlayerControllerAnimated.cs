@@ -45,10 +45,10 @@ public class PlayerControllerAnimated : MonoBehaviour
     // Player's collider component
     CapsuleCollider capsule_;
 
-    // Menu canvas
-    Canvas menuCanvas_;
+    // Menu controller script
+    MenuController menuController_;
     // Map canvas
-    Canvas mapCanvas_;
+    //Canvas mapCanvas_;
     // Crosshair canvas
     Canvas crosshairCanvas_;
 
@@ -65,9 +65,11 @@ public class PlayerControllerAnimated : MonoBehaviour
 	float noiseLevel_ = 0.0f;
     // Flag indicating if the menu is open
     bool isMenuOpen_ = false;
+    // Flag indicating if the game has started
+    bool hasGameStarted_ = false;
 
     // Init function
-    void Start()
+    void Awake()
     {
         // Get rigidbody component
         rb_ = GetComponent<Rigidbody>();
@@ -84,10 +86,9 @@ public class PlayerControllerAnimated : MonoBehaviour
         // Get collider component
         capsule_ = GetComponent<CapsuleCollider>();
 
-        // Get menu canvas component
-        menuCanvas_ = GameObject.Find( "Menu" ).GetComponent<Canvas>();
+        menuController_ = GameObject.Find( "Menu" ).GetComponent<MenuController>();
         // Get map canvas component
-        mapCanvas_ = GameObject.Find( "Map" ).GetComponent<Canvas>();
+        //mapCanvas_ = GameObject.Find( "Map" ).GetComponent<Canvas>();
         // Get crosshair canvas component
         crosshairCanvas_ = GameObject.Find( "DynamicCrosshair" ).GetComponent<Canvas>();
 
@@ -97,29 +98,32 @@ public class PlayerControllerAnimated : MonoBehaviour
 		anim_.SetFloat( "Forward", 0.0f );
 
 		// Hide mouse cursor
-		Cursor.visible = false;
-		// Lock mouse cursor to screen center
-		Cursor.lockState = CursorLockMode.Locked;
+		//Cursor.visible = false;
+        //Cursor.visible = true;
+        // Lock mouse cursor to screen center
+        //Cursor.lockState = CursorLockMode.Locked;
+        //Cursor.lockState = CursorLockMode.None;
 
         // Store gun position in local space
-		gunPosition_ = gun_.transform.position;
+        gunPosition_ = gun_.transform.position;
     }
 
 	// Update function
 	void Update()
     {
         // Process keyboard input only when the player is alive
-        if( !health_.isDead_ )
+        if( !health_.isDead_ && hasGameStarted_ )
         {
             ProcessKeyboardInput();
         }
+        hasGameStarted_ = menuController_.HasGameStarted();
 	}
 
     // Update function that runs when physics is calculated?
     void FixedUpdate()
     {
         // Process player's movement only when the player is alive
-        if( !health_.isDead_ )
+        if( !health_.isDead_ && hasGameStarted_ )
         {
             playerPosition_ = capsule_.bounds.center;
             PlayerMovement();
@@ -205,12 +209,15 @@ public class PlayerControllerAnimated : MonoBehaviour
         // Show map
         if( Input.GetKeyDown( KeyCode.Tab ) )
         {
-            mapCanvas_.enabled = true;
+            if( !isMenuOpen_ )
+            {
+                menuController_.ShowMap();
+            }
         }
         // Hide map
         else if( Input.GetKeyUp( KeyCode.Tab ) )
         {
-            mapCanvas_.enabled = false;
+            menuController_.HideMap();
         }
 
         // Show/hide menu and unlock/lock the mouse cursor
@@ -218,33 +225,20 @@ public class PlayerControllerAnimated : MonoBehaviour
         {
             // Invert menu open flag
             isMenuOpen_ = !isMenuOpen_;
-            // Enable/disable menu canvas
-            menuCanvas_.enabled = isMenuOpen_;
-
-            // Unlock the mouse cursor
-            if( Cursor.lockState == CursorLockMode.Locked )
-			{
-				Cursor.visible = true;
-				Cursor.lockState = CursorLockMode.None;
-			}
-            // Lock the mouse cursor 
+            if( isMenuOpen_ )
+            {
+                menuController_.ShowMainMenu();
+            }
             else
             {
-				Cursor.visible = false;
-				Cursor.lockState = CursorLockMode.Locked;
-			}
+                menuController_.ExitMenu();
+            }
         }
-
-        // Pause the game if the menu is open
+        
+        // Don't process the controlls if the menu is open
         if( isMenuOpen_ )
         {
-            Time.timeScale = 0;
             return;
-        }
-        // Unpause the game
-        else
-        {
-            Time.timeScale = 1.0f;
         }
 
         // Shoot - LMB
@@ -283,7 +277,7 @@ public class PlayerControllerAnimated : MonoBehaviour
 		{
             // Set run movement speed, change audio sound to run sound, 
             //  and set the noise level
-			movementSpeed_ = 10.0f;
+			movementSpeed_ = 7.5f;
 			walkAudio_.clip = runClip_;
 			walkAudio_.minDistance = 15;
 			walkAudio_.maxDistance = 30;
@@ -353,7 +347,7 @@ public class PlayerControllerAnimated : MonoBehaviour
 		if( Input.GetKeyDown( KeyCode.Space ) && isGrounded_ )
 		{
             // Apply jump force to rigidbody
-			rb_.AddForce( new Vector3 ( 0.0f, 5.0f, 0.0f ), ForceMode.Impulse );
+			rb_.AddForce( new Vector3 ( 0.0f, 4.0f, 0.0f ), ForceMode.Impulse );
             // Set jump audio to jump sound, set the noise level and play it
             jumpAudio_.clip = jumpClip_;
 			jumpAudio_.minDistance = 10;

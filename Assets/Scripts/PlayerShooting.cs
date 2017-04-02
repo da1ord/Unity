@@ -7,29 +7,22 @@ public class PlayerShooting : MonoBehaviour
 {
     // Ammo text to draw on HUD
 	public Text ammoText_;
-
     // Player's main camera
 	public Camera playerCamera_;
-
     // Crosshair spread amount
     public static float aimSpread_;
-
     // Sound to play on ammo pickup
     public AudioClip ammoPickUp_;
-
     // Shooting mask (layers to test against)
     public LayerMask shootMask_;
 
 
     // Shooting ray for raycasting
     Ray shootRay_;
-
     // Shooting hit point
 	RaycastHit shootHit_;
-
     // Player's controller script
     PlayerControllerAnimated playerController_;
-    
 	// Player's active gun
 	SciFiRifle activeGun_;
 
@@ -67,7 +60,7 @@ public class PlayerShooting : MonoBehaviour
 		}
 
         // Increase crosshair spread while shooting
-        aimSpread_ += Time.deltaTime * 15;
+        aimSpread_ += Time.deltaTime * 13;
 
         // Shoot with active gun
         activeGun_.Shoot();

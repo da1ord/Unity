@@ -3,207 +3,214 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class EnemyController : MonoBehaviour {
-
-	Transform player_;
-	NavMeshAgent nav_;
-	EnemyHealth enemyHealth_;
-//	EnemyShooting enemyShooting_;
-//	PlayerController playerController_;
-	PlayerControllerAnimated playerController_;
-
-	Vector3 enemyPosition_;
-	Vector3 playerPosition_;
-	CapsuleCollider capsule_;
-    // TODO: Redo to IFace
-    // Player's active gun
-    SciFiRifle activeGun_;
-    //M4Rifle activeGun_;
-	Animator anim_;
-	// Walk audio source
-	AudioSource walkAudio_;
-	// Speech audio source
-	AudioSource speechAudio_;
-	// Walk audio clip
-	public AudioClip walkClip_;
-	// Run audio clip
-	public AudioClip runClip_;
-
+public class EnemyController : MonoBehaviour
+{
+    // Walk audio clip
+    public AudioClip walkClip_;
+    // Run audio clip
+    public AudioClip runClip_;
     // Player detected audio clip
     public AudioClip playerDetectedClip_;
     // Player lost (seeking start) audio clip
     public AudioClip playerLostClip_;
+    // Enemy sight distance
+    public float sightDistance_ = 10.0f;
+    // Enemy field of view angle (half)
+    public float fovYHalf_ = 30.0f;
 
+    // Player transform matrix
+    Transform player_;
+    // Navigation mesh agent component
+	NavMeshAgent nav_;
+    // Enemy health script
+	EnemyHealth enemyHealth_;
+    // Player controller script
+	PlayerControllerAnimated playerController_;
+    // Capsule component
+    CapsuleCollider capsule_;
+    // Enemy§s animator component
+    Animator anim_;
+
+    // Enemy position vector
+    Vector3 enemyPosition_;
+    // Player position vector
+	Vector3 playerPosition_;
+    // Player direction vector
+    Vector3 playerDirection_;
+    // Distance from the player
+    float playerDistance_;
+    // Flag indicating if the player is alive
+    bool isPlayerAlive_ = true;
+    // Enemy's active gun
+    SciFiRifle activeGun_;
+	// Walk audio source
+	AudioSource walkAudio_;
+	// Speech audio source
+	AudioSource speechAudio_;
+
+    // Enemy rotation speed
     float rotationSpeed_ = 1.5f;
 
+    // Shooting ray for raycasting
     Ray shootRay_;
+    // Shooting hit point
     RaycastHit shootHit_;
+    // Environment mask for shooting test
+    LayerMask environmentMask_;
+    // Gun offset from the enemy position (center)
     Vector3 gunOffset_ = new Vector3( 0.0f, 0.5f, 0.0f );
 
+    // Flag indicating if the player was detected
     bool playerDetected_ = false;
 
-	enum EnemyState { Patrolling, Distracted, Seeking, Following, Shooting };
+    // States in which the enemy can be
+	enum EnemyState { Patrolling, Distracted, Seeking, Following };
+    // Initial state
 	EnemyState enemyState_ = EnemyState.Patrolling;
+    // Last known state
 	EnemyState lastEnemyState_ = EnemyState.Patrolling;
-	LayerMask environmentMask_;
 
-	public float sightDistance_ = 30.0f;
-	public float fovYHalf_ = 30.0f;
+    // Enemy walking speed
+    const float walkSpeed_ = 1.5f;
+    // Enemy distrected speed
+    const float distractedSpeed_ = 2.5f;
+    // Enemy running speed
+    const float rushSpeed_ = 4.0f;
 
-	float walkSpeed_ = 1.5f;/*4.5f*/
-	float rushSpeed_ = 6.0f;/*7.5f*/
+    // Enemy minimum distance to be able to move and shoot
+    float minShootRange_;
+    // Enemy maximum distance to be able to shoot
+    float maxShootRange_;
+    // Timer for enemy seeking state
+    float seekingTimer_ = 5.0f;
 
-	// TODO: Get from gun
-	float minShootRange_;
-	float maxShootRange_;
-
-	float seekingTimer_ = 5.0f;
-	float playerDistance_;
-    bool isPlayerAlive_ = true;
-
+    // Enemy patrolling path
 	Vector3[] path_ = new []{ new Vector3( -20.0f, 1.0f, 20.0f ), 
 							  new Vector3( -20.0f, 1.0f, -20.0f ), 
 							  new Vector3( 29.0f, 1.0f, -29.0f ),
 							  new Vector3( 20.0f, 1.0f, 20.0f )};
-
+    // Path destination point ID
 	int destPointId_ = 3;
-	int nextDestPointId_ = 0;
-
-	static Vector3 NO_DISTRACTION_SET = new Vector3( 1000.0f, 1000.0f, 1000.0f );
+    // Path next destination point ID
+    int nextDestPointId_ = 0;
+    // Default distraction point position when it is not set
+    static Vector3 NO_DISTRACTION_SET = new Vector3( 1000.0f, 1000.0f, 1000.0f );
+    // Distraction point position
 	Vector3 distractionPoint_;
 
-	void Start()  // Start
+    const bool DEBUG = false;
+
+    // Init function
+    void Start()
 	{
+        // Get player transform matrix
 		player_ = GameObject.FindGameObjectWithTag( "Player" ).transform;
+        // Get navigation mesh agent component
 		nav_ = GetComponent<NavMeshAgent>();
-		enemyHealth_ = GetComponent<EnemyHealth>();
-//		enemyShooting_ = gameObject.GetComponentInChildren<EnemyShooting>();
-//		playerController_ = GameObject.FindGameObjectWithTag( "Player" ).GetComponent<PlayerController>();
-		playerController_ = GameObject.FindGameObjectWithTag( "Player" ).GetComponent<PlayerControllerAnimated>();
+        // Get capsule component
+        capsule_ = GetComponent<CapsuleCollider>();
+        // Get enemy health script
+        enemyHealth_ = GetComponent<EnemyHealth>();
+        // Get player controller script
+        playerController_ = GameObject.FindGameObjectWithTag( "Player" ).GetComponent<PlayerControllerAnimated>();
 
+        // Get active gun component
+        activeGun_ = GetComponentInChildren<SciFiRifle>();
+        // Get animator component
+        anim_ = GetComponent<Animator>();
+        // Get walk audio component
+        walkAudio_ = GetComponents<AudioSource>()[0];
+        // Get speech audio component
+        speechAudio_ = GetComponents<AudioSource>()[1];
+
+        // Get environment layer mask for shooting
+        environmentMask_ = LayerMask.GetMask( "Environment" );
+
+        // Create shoot ray
         shootRay_ = new Ray();
-
-		activeGun_ = GetComponentInChildren<SciFiRifle>();
-		anim_ = GetComponent<Animator>();
-		walkAudio_ = GetComponents<AudioSource>()[0];
-		speechAudio_ = GetComponents<AudioSource>()[1];
-
-		environmentMask_ = LayerMask.GetMask( "Environment" );
-
-		capsule_ = GetComponent<CapsuleCollider>();
-
-		minShootRange_ = activeGun_.GetRange() / 4.0f - 5.0f; // 10
-		maxShootRange_ = activeGun_.GetRange() / 4.0f + 5.0f; // 20
+        // Get minimum distance to be able to move and shoot
+        minShootRange_ = activeGun_.GetRange() / 4.0f - 5.0f; // 10
+        // Get maximum distance to be able to shoot
+        maxShootRange_ = activeGun_.GetRange() / 4.0f + 5.0f; // 20
+        // Clear distraction point
 		distractionPoint_ = NO_DISTRACTION_SET;
 
+        // Go to the next point in defined path
 		GoToNextPoint();
-//		Debug.Log( "Start" );
 	}
 
+    // Update function
     void Update()
     {
+        // Update enemy and player positions
         enemyPosition_ = capsule_.bounds.center + gunOffset_;
         playerPosition_ = playerController_.playerPosition_;
-        //		Debug.Log( enemyState_ );
-        //		Debug.Log( distractionPoint_ );
 
         // Enemy is alive
         if( enemyHealth_.health_ > 0 )
         {
-            // Calculate and draw the sight boundaries
-            Vector3 left = Quaternion.Euler( 0, -fovYHalf_, 0 ) * transform.forward;
-            Vector3 right = Quaternion.Euler( 0, fovYHalf_, 0 ) * transform.forward;
-            Debug.DrawRay( transform.position, transform.forward * sightDistance_, Color.red );
-            Debug.DrawRay( transform.position, left * sightDistance_, Color.blue );
-            Debug.DrawRay( transform.position, right * sightDistance_, Color.blue );
+            #region DEBUG
+            if( true/*Debug.isDebugBuild*/ )
+            {
+                // Calculate and draw the sight boundaries
+                Vector3 left = Quaternion.Euler( 0, -fovYHalf_, 0 ) * transform.forward;
+                Vector3 right = Quaternion.Euler( 0, fovYHalf_, 0 ) * transform.forward;
+                Debug.DrawRay( transform.position, transform.forward * sightDistance_, Color.red );
+                Debug.DrawRay( transform.position, left * sightDistance_, Color.blue );
+                Debug.DrawRay( transform.position, right * sightDistance_, Color.blue );
+            }
+            #endregion //DEBUG
 
-            // Get direction to player
-            //			Vector3 playerDirection = player_.position - enemyPosition_;
-            Vector3 playerDirection = playerPosition_ - enemyPosition_;
-            playerDistance_ = playerDirection.magnitude;
+            // Get direction and distance from player
+            playerDirection_ = playerPosition_ - enemyPosition_;
+            playerDistance_ = playerDirection_.magnitude;
 
+            // Update audio volume according to the distance from player
             walkAudio_.volume = Mathf.Min( 1.0f, 1.0f / playerDistance_ );
             speechAudio_.volume = Mathf.Min( 1.0f, 20.0f / playerDistance_ );
 
+            // Enable nav mesh agent
             nav_.enabled = true;
+            // Disable updating of rotation (enable only in patrolling state)
+            nav_.updateRotation = false;
+            // Set player detected flag to false
             playerDetected_ = false;
-
-            // TODO: Refactor
+            
+            //// Vision detection
             // Player is in enemy sight distance
             if( playerDistance_ < sightDistance_ && isPlayerAlive_ )
             {
-                float angleToPlayer = Vector3.Angle( playerDirection, transform.forward );
-                // Player in enemy sight cone
+                // Get angle to th player
+                float angleToPlayer = Vector3.Angle( playerDirection_, transform.forward );
+                // Check if player is in enemy sight cone
                 if( angleToPlayer < fovYHalf_ )
                 {
-                    // Player is seen by enemy (no environment in a way)
-                    //if( Physics.Raycast( transform.position, playerDirection, sightDistance_, LayerMask.GetMask( "Player" ) ) )
-                    if( !Physics.Raycast( enemyPosition_, playerDirection, playerDistance_, environmentMask_ ) )
+                    // Check if player could be seen by enemy (no environment in way)
+                    if( !Physics.Raycast( enemyPosition_, playerDirection_, playerDistance_, environmentMask_ ) )
                     {
-                        Debug.DrawLine( enemyPosition_, playerPosition_ );
-                        //Debug.Log( distractionPoint_ );
-                        playerDetected_ = true;
-                        if( !speechAudio_.isPlaying )
+                        #region DEBUG
+                        if( Debug.isDebugBuild )
                         {
-                            //speechAudio_.clip = playerDetectedClip_;
-                            //speechAudio_.Play();
+                            Debug.DrawLine( enemyPosition_, playerPosition_ );
                         }
+                        #endregion
+                        
+                        // Set player detected flag
+                        playerDetected_ = true;
+                        // Set following state
                         enemyState_ = EnemyState.Following;
 
-                        distractionPoint_ = playerPosition_;//player_.transform.position;
-
-                        // TODO: LookAt player? no need to check for the next angle
+                        distractionPoint_ = playerPosition_;
 
                         // Check if Player is in shooting range of enemy
                         if( playerDistance_ < maxShootRange_ )
                         {
-                            // Rotate to the player
-                            //Vector3 rotation = playerDirection.normalized;
-                            //Quaternion lookRotation = Quaternion.LookRotation( new Vector3( rotation.x, 0, rotation.z ) );
-                            //transform.rotation = Quaternion.Slerp( transform.rotation, lookRotation, Time.deltaTime * 5.0f );
-                            
-                            // Can shoot at this moment (shoot-enable timer elapsed) and clip is not empty
-                            if( activeGun_.CanShoot() )
-                            {
-                                activeGun_.Shoot();
-                                
-                                // Add jitter to the shootRay
-                                Vector3 jitter = Random.insideUnitSphere / 25.0f; // TODO: Change difficulty by altering jitter size
-                                shootRay_.origin = enemyPosition_;
-                                shootRay_.direction = playerDirection.normalized + jitter;
-
-                                // Hit player
-                                if( Physics.Raycast( shootRay_, out shootHit_, activeGun_.GetRange() ) )
-                                {
-                                    if( shootHit_.collider.tag == "Player" )
-                                    {
-                                        PlayerHealth playerHealth = shootHit_.collider.GetComponent<PlayerHealth>();
-                                        if( playerHealth != null )
-                                        {
-                                            // Set player alive flag
-                                            isPlayerAlive_ = !playerHealth.isDead_;
-
-                                            // Hurt player
-                                            playerHealth.TakeDamage( 10 ); // activeGun_.GetDamagePerShot()
-                                            Debug.DrawLine( shootRay_.origin, shootRay_.origin + shootRay_.direction * 100.0f );
-                                        }
-                                    }
-                                }
-                                Debug.DrawRay( transform.position, transform.forward * sightDistance_, Color.green );
-                            }
-
-                            // Reload if needed
-                            if( activeGun_.GetClipBullets() == 0 )
-                            {
-                                // Disable effects after last bullet
-                                activeGun_.DisableEffects();
-                                // Reload
-                                activeGun_.Reload();
-                            }
+                            Shoot();
 
                             // Check if Player is too close to enemy
                             if( playerDistance_ < minShootRange_ )
                             {
+                                // Disable enemy movement
                                 nav_.enabled = false;
                             }
                         }
@@ -211,92 +218,62 @@ public class EnemyController : MonoBehaviour {
                 }
             }
 
-            // Player is behind environment structure or
-            // Player out of enemy sight cone or
-            // Player out of enemy sight distance
+            // Player is outside of enemy vision
+            //  Player is behind environment structure or
+            //  Player out of enemy sight cone or
+            //  Player out of enemy sight distance
             if( !playerDetected_ )
             {
                 PlayerNotInSight();
             }
 
-            if( enemyState_ < EnemyState.Following ) // Patrolling, Distracted, Seeking
-            {
-                // Enemy can hear a noise
-                if( playerController_.GetNoiseLevel() > playerDistance_ )
-                {
-                    // Set distracted state
-                    enemyState_ = EnemyState.Distracted;
-                    distractionPoint_ = playerPosition_;
-                }
-            }
-
-            // TODO: Redo somehow :)
-            // Check if NavMeshAgent is enabled to avoid errors (calling of SetDestination and GetRemainingDistance 
-            // on disabled NavMeshAgent)
-            if( nav_.enabled == false )
-            {
-                anim_.SetFloat( "Speed", 0.0f );
-                lastEnemyState_ = enemyState_;
-
-                if( walkAudio_.isPlaying )
-                {
-                    walkAudio_.Stop();
-                }
-                return;
-            }
-
-            /*TEST*/
-            // Check destination remaining distance
-            if( nav_.remainingDistance < 1.5f )
-            {
-                if( enemyState_ == EnemyState.Patrolling )
-                {
-                    GoToNextPoint();
-                }
-                else if( enemyState_ == EnemyState.Distracted )
-                {
-                    // Clear distraction point
-                    distractionPoint_ = NO_DISTRACTION_SET;
-
-                    // Set seeking state
-                    enemyState_ = EnemyState.Seeking;
-                }
-                // TODO: && Seeking?
-                else if( seekingTimer_ == 5.0f )
-                {
-                    // Set patrolling state
-                    enemyState_ = EnemyState.Patrolling;
-
-                    GoToActualPoint();
-                }
-            }
-            /*TEST*/
-
-            //Debug.Log( enemyState_ );
+            Debug.Log( enemyState_ );
             switch( enemyState_ )
             {
                 case EnemyState.Patrolling:
                 {
                     // Set walk speed
                     nav_.speed = walkSpeed_;
-
-                    anim_.SetFloat( "Speed", walkSpeed_ );
                     nav_.acceleration = walkSpeed_;
+                    // Set animator walk speed
+                    anim_.SetFloat( "Speed", walkSpeed_ );
 
-                    // Go to actual point
-                    nav_.SetDestination( path_[destPointId_] );
+                    // Check if the destination point has been almost reached
+                    if( nav_.remainingDistance < 1.5f )
+                    {
+                        // Go to the next point
+                        GoToNextPoint();
+                    }
+                    else
+                    {
+                        // Go to actual point
+                        GoToActualPoint();
+                    }
+                    nav_.updateRotation = true;
                     break;
                 }
                 case EnemyState.Distracted:
                 {
                     // Walk faster towards distraction point
-                    nav_.speed = walkSpeed_;
+                    nav_.speed = distractedSpeed_;
 
-                    anim_.SetFloat( "Speed", walkSpeed_ );
-                    nav_.acceleration = walkSpeed_;
+                    anim_.SetFloat( "Speed", distractedSpeed_ );
+                    nav_.acceleration = distractedSpeed_;
 
-                    // Go to the distraction point
-                    nav_.SetDestination( distractionPoint_ );
+                    // Check if the destination point has been almost reached
+                    if( nav_.remainingDistance < 1.5f )
+                    {
+                        // Clear distraction point
+                        distractionPoint_ = NO_DISTRACTION_SET;
+
+                        // Set seeking state
+                        enemyState_ = EnemyState.Seeking;
+                    }
+                    else
+                    {
+                        // Go to the distraction point
+                        nav_.SetDestination( distractionPoint_ );
+                    }
 
                     // Set enemy rotation speed
                     rotationSpeed_ = 1.5f;
@@ -311,22 +288,46 @@ public class EnemyController : MonoBehaviour {
                         speechAudio_.Play();
                     }
 
-                    // Run towards player
-                    nav_.speed = rushSpeed_;
+                    // Check if nav mesh agent is disabled - just shooting
+                    if( nav_.enabled == false )
+                    {
+                        // Stop walking animation
+                        anim_.SetFloat( "Speed", 0.0f );
+                        //lastEnemyState_ = enemyState_;
 
-                    anim_.SetFloat( "Speed", rushSpeed_ );
-                    nav_.acceleration = rushSpeed_;
+                        // Stop walk audio
+                        if( walkAudio_.isPlaying )
+                        {
+                            walkAudio_.Stop();
+                        }
+                    }
+                    // Nav mesh agent is enabled - shooting and running
+                    else
+                    {
+                        // Run towards player
+                        nav_.speed = rushSpeed_;
 
-                    // Follow the player
-                    nav_.SetDestination( player_.position );
-                    Debug.DrawRay( transform.position, transform.up * 5.0f, Color.yellow );
-                    
+                        anim_.SetFloat( "Speed", rushSpeed_ );
+                        nav_.acceleration = rushSpeed_;
+
+                        // Follow the player
+                        nav_.SetDestination( player_.position );
+
+                        #region DEBUG
+                        if( Debug.isDebugBuild )
+                        {
+                            Debug.DrawRay( transform.position, transform.up * 5.0f, Color.yellow );
+                        }
+                            #endregion
+
+                    }
                     // Set enemy rotation speed
                     rotationSpeed_ = 4.0f;
                     break;
                 }
                 case EnemyState.Seeking:
                 {
+                    Debug.Log( seekingTimer_ );
                     // Seeking just started
                     //if( seekingTimer_ == 5.0f )
                     if( lastEnemyState_ != enemyState_ )
@@ -347,28 +348,36 @@ public class EnemyController : MonoBehaviour {
                     {
                         // Reset seek timer
                         seekingTimer_ = 5.0f;
+
+                        // Set patrolling state
+                        enemyState_ = EnemyState.Patrolling;
+                        // Go to actual point
+                        GoToActualPoint();
                     }
                     break;
                 }
             }
-
-            // TODO: Redo to not set it every frame
+            
             // Enemy is moving
             if( enemyState_ != EnemyState.Seeking )
 			{
-				if( nav_.speed < 5.0f )
-				{
-					walkAudio_.clip = walkClip_;
-					walkAudio_.minDistance = 5;
-					walkAudio_.maxDistance = 10;
-				}
-				else
-				{
-					walkAudio_.clip = runClip_;
-					walkAudio_.minDistance = 15;
-					walkAudio_.maxDistance = 30;
-				}
-				if( !walkAudio_.isPlaying )
+                // Check if enemy state has changed
+                if( lastEnemyState_ != enemyState_ )
+                {
+                    if( nav_.speed < 5.0f )
+				    {
+					    walkAudio_.clip = walkClip_;
+					    walkAudio_.minDistance = 5;
+					    walkAudio_.maxDistance = 10;
+				    }
+				    else
+				    {
+					    walkAudio_.clip = runClip_;
+					    walkAudio_.minDistance = 15;
+					    walkAudio_.maxDistance = 30;
+				    }
+                }
+                if( !walkAudio_.isPlaying )
 				{
 					walkAudio_.Play();
 				}
@@ -378,77 +387,152 @@ public class EnemyController : MonoBehaviour {
 			{
 				walkAudio_.Stop();
 			}
-
-            // Disable updating of rotation when leaving Patrolling state
-            if( lastEnemyState_ == EnemyState.Patrolling && enemyState_ != EnemyState.Patrolling )
+            
+            if( nav_.updateRotation == false && enemyState_ != EnemyState.Seeking)
             {
-                nav_.updateRotation = false;
-            }
-            // Enable updating of rotation when entering Patrolling state
-            if( lastEnemyState_ != EnemyState.Patrolling && enemyState_ == EnemyState.Patrolling )
-            {
-                nav_.updateRotation = true;
-            }
-            // Rotate quicker when navMeshAgent rotation update is disabled 
-            if( nav_.updateRotation == false )
-            {
-                Vector3 rotation = playerDirection.normalized;
+                Vector3 rotation = ( distractionPoint_ - enemyPosition_ ).normalized;//playerDirection_.normalized;
                 Quaternion lookRotation = Quaternion.LookRotation( new Vector3( rotation.x, 0, rotation.z ) );
                 transform.rotation = Quaternion.Slerp( transform.rotation, lookRotation, Time.deltaTime * rotationSpeed_ );
             }
 
             lastEnemyState_ = enemyState_;
 		}
+        // Enemy is dead
 		else
 		{
 			nav_.enabled = false;
 		}
 	}
-		
-	// Routine used when Player is not detected by enemy
+
+    // Shoot function
+    void Shoot()
+    {
+        // Can shoot at this moment (shoot-enable timer elapsed) and clip is not empty
+        if( activeGun_.CanShoot() )
+        {
+            // Call active gun shoot function
+            activeGun_.Shoot();
+
+            // Add jitter to the shootRay
+            Vector3 jitter = Random.insideUnitSphere / 25.0f; // TODO: Change difficulty by altering jitter size
+            shootRay_.origin = enemyPosition_;
+            shootRay_.direction = playerDirection_.normalized + jitter;
+
+            // Test shoot ray against player
+            if( Physics.Raycast( shootRay_, out shootHit_, activeGun_.GetRange() ) )
+            {
+                // Player was hit
+                if( shootHit_.collider.tag == "Player" )
+                {
+                    // Get player health component
+                    PlayerHealth playerHealth = shootHit_.collider.GetComponent<PlayerHealth>();
+                    if( playerHealth != null )
+                    {
+                        // Hurt player
+                        playerHealth.TakeDamage( activeGun_.GetDamagePerShot() / 2 );
+
+                        // Set player alive flag (get value from player health script)
+                        isPlayerAlive_ = !playerHealth.isDead_;
+
+                        #region DEBUG
+                        if( Debug.isDebugBuild )
+                        {
+                            Debug.DrawLine( shootRay_.origin, shootRay_.origin + shootRay_.direction * 100.0f );
+                        }
+                        #endregion
+                    }
+                }
+            }
+            #region DEBUG
+            if( Debug.isDebugBuild )
+            {
+                Debug.DrawRay( transform.position, transform.forward * sightDistance_, Color.green );
+            }
+            #endregion
+        }
+
+        // Reload if needed
+        if( activeGun_.GetClipBullets() == 0 )
+        {
+            // Disable effects after last bullet
+            activeGun_.DisableEffects();
+            // Reload
+            activeGun_.Reload();
+        }
+    }
+
+	// Routine called when Player is not detected by enemy
 	void PlayerNotInSight()
-	{
-		if( enemyState_ != EnemyState.Seeking )
+    {
+        //// Sound detection
+        // Enemy can hear a noise
+        if( playerController_.GetNoiseLevel() > playerDistance_ )
+        {
+            // Set distracted state
+            enemyState_ = EnemyState.Distracted;
+            // Set distraction point to player position
+            distractionPoint_ = playerPosition_;
+            return;
+        }
+
+        // Set patrolling or distracted state according to set/cleared 
+        //  distraction point
+        // Check if enemy is not in seeking state
+        if( enemyState_ != EnemyState.Seeking )
 		{
+            // No distraction point set -> set patrolling state
 			if( distractionPoint_ == NO_DISTRACTION_SET )
 			{
 				enemyState_ = EnemyState.Patrolling;
-			}
-			else
-			{
+            }
+            // Distraction point exists -> set distracted state
+            else
+            {
 				enemyState_ = EnemyState.Distracted;
 			}
 		}
 	}
 
+    // Set enemy distraction point
 	public void SetDistractionPoint( Vector3 distraction_point )
 	{
+        // Check if not already following the player
 		if( enemyState_ != EnemyState.Following )
 		{
+            // Set distracted state
 			enemyState_ = EnemyState.Distracted;
+            // Set distraction point
 			distractionPoint_ = distraction_point;
 		}
 	}
 
+    // Go to the next point when patrolling
 	void GoToNextPoint()
 	{
+        // Return if the path is not defined
 		if( path_.Length == 0 )
 		{
 			return;
 		}
 
+        // Set destination point to the next one in path
 		nav_.SetDestination( path_[nextDestPointId_] );
+        // Update next point ID
 		nextDestPointId_ = ( nextDestPointId_ + 1 ) % path_.Length;
+        // Update actual point ID
 		destPointId_ = ( destPointId_ + 1 ) % path_.Length;
 	}
 
+    // Go to actual point
 	void GoToActualPoint()
-	{
-		if( path_.Length == 0 )
+    {
+        // Return if the path is not defined
+        if( path_.Length == 0 )
 		{
 			return;
 		}
 
-		nav_.SetDestination( path_[destPointId_] );
+        // Set destination point to the last one used
+        nav_.SetDestination( path_[destPointId_] );
 	}
 }
