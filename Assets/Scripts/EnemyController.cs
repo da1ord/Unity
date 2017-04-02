@@ -411,7 +411,7 @@ public class EnemyController : MonoBehaviour
             }
 
             // If the enemy is distracted or following, update his rotation using this code
-            if( enemyState_ == EnemyState.Distracted || enemyState_ != EnemyState.Following )
+            if( enemyState_ == EnemyState.Distracted || enemyState_ == EnemyState.Following )
             //if( nav_.updateRotation == false && enemyState_ != EnemyState.Seeking )
             {
                 Vector3 rotation = ( distractionPoint_ - enemyPosition_ ).normalized;//playerDirection_.normalized;
