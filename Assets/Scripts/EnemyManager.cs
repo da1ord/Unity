@@ -17,7 +17,7 @@ public class EnemyManager : MonoBehaviour
     public GameObject[] spawnPoints2_;
 
     // Enemy spawn time
-    float spawnTime_ = 20.0f;
+    float spawnTime_ = 25.0f;
     // Enemy count variable
     int enemyCount_ = 0;
 
