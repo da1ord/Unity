@@ -151,18 +151,6 @@ public class EnemyController : MonoBehaviour
         // Enemy is alive
         if( enemyHealth_.health_ > 0 )
         {
-            #region DEBUG
-            if( true/*Debug.isDebugBuild*/ )
-            {
-                // Calculate and draw the sight boundaries
-                Vector3 left = Quaternion.Euler( 0, -fovYHalf_, 0 ) * transform.forward;
-                Vector3 right = Quaternion.Euler( 0, fovYHalf_, 0 ) * transform.forward;
-                Debug.DrawRay( transform.position, transform.forward * sightDistance_, Color.red );
-                Debug.DrawRay( transform.position, left * sightDistance_, Color.blue );
-                Debug.DrawRay( transform.position, right * sightDistance_, Color.blue );
-            }
-            #endregion //DEBUG
-
             // Get direction and distance from player
             playerDirection_ = playerPosition_ - enemyPosition_;
             playerDistance_ = playerDirection_.magnitude;
@@ -192,13 +180,6 @@ public class EnemyController : MonoBehaviour
                     //if( !Physics.Raycast( enemyPosition_, playerDirection_, playerDistance_, environmentMask_ ) )
                     if( Physics.Raycast( enemyPosition_, playerDirection_, out shootHit_, sightDistance_/*, environmentMask_*/ ) )
                     {
-                        #region DEBUG
-                        if( Debug.isDebugBuild )
-                        {
-                            Debug.DrawLine( enemyPosition_, playerPosition_ );
-                        }
-                        #endregion
-
                         if( shootHit_.collider.tag == "Player" )
                         {
                             // Set player detected flag
@@ -234,8 +215,6 @@ public class EnemyController : MonoBehaviour
                 PlayerNotInSight();
             }
 
-            Debug.Log( "Detected " + playerDetected_ );
-            Debug.Log( enemyState_ );
             switch( enemyState_ )
             {
                 case EnemyState.Patrolling:
@@ -332,21 +311,11 @@ public class EnemyController : MonoBehaviour
 
                         // Follow the player
                         nav_.SetDestination( player_.position );
-
-                        #region DEBUG
-                        if( Debug.isDebugBuild )
-                        {
-                            Debug.DrawRay( transform.position, transform.up * 5.0f, Color.yellow );
-                        }
-                        #endregion
-
                     }
                     break;
                 }
                 case EnemyState.Seeking:
                 {
-                    //Debug.Log( seekingTimer_ );
-                    //Debug.Log( enemyPosition_ );
                     // Seeking just started
                     if( seekingTimer_ == initSeekingTimerValue_ )
                     {
@@ -466,22 +435,9 @@ public class EnemyController : MonoBehaviour
 
                         // Set player alive flag (get value from player health script)
                         isPlayerAlive_ = !playerHealth.isDead_;
-
-                        #region DEBUG
-                        if( Debug.isDebugBuild )
-                        {
-                            Debug.DrawLine( shootRay_.origin, shootRay_.origin + shootRay_.direction * 100.0f );
-                        }
-                        #endregion
                     }
                 }
             }
-            #region DEBUG
-            if( Debug.isDebugBuild )
-            {
-                Debug.DrawRay( transform.position, transform.forward * sightDistance_, Color.green );
-            }
-            #endregion
         }
 
         // Reload if needed
