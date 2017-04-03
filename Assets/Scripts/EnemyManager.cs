@@ -97,7 +97,6 @@ public class EnemyManager : MonoBehaviour
         GameObject instance = (GameObject)Instantiate( enemy, waypoints[0].position, waypoints[0].rotation );
         // Get enemy controller script
         EnemyController ec = instance.GetComponent<EnemyController>();
-        Debug.Log( waypoints.Length );
         // Set enemy's path
         ec.SetPath( waypoints );
     }

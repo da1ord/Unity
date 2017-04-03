@@ -242,13 +242,13 @@ public class PlayerControllerAnimated : MonoBehaviour
         }
 
         // Shoot - LMB
-        if( Input.GetMouseButton( 0 ) )
+        if( Input.GetButton( "Fire1" ) )
 		{
 			shooting_.Shoot();
 		}
 
 		// Enter scope mode - RMB
-		if( Input.GetMouseButtonDown( 1 ) )
+		if( Input.GetButtonDown( "Fire2" ) )
 		{
             crosshairCanvas_.enabled = false;
 
@@ -258,7 +258,7 @@ public class PlayerControllerAnimated : MonoBehaviour
 			playerCamera_.fieldOfView /= 2.0f;
 		}
 		// Exit scope mode
-		else if( Input.GetMouseButtonUp( 1 ) )
+		else if( Input.GetButtonUp( "Fire2" ) )
         {
             crosshairCanvas_.enabled = true;
 

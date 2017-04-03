@@ -100,8 +100,6 @@ public class EnemyController : MonoBehaviour
     // Distraction point position
 	Vector3 distractionPoint_;
 
-    const bool DEBUG = false;
-
     // Init function
     void Start()
 	{
@@ -143,6 +141,16 @@ public class EnemyController : MonoBehaviour
 
     // Update function
     void Update()
+    {
+        // If player not detected, check for audio clue every frame
+        if( !playerDetected_ )
+        {
+            PlayerNotInSight();
+        }
+    }
+
+    // Fixed update function
+    void FixedUpdate()
     {
         // Update enemy and player positions
         enemyPosition_ = capsule_.bounds.center + gunOffset_;
@@ -210,10 +218,10 @@ public class EnemyController : MonoBehaviour
             //  Player is behind environment structure or
             //  Player out of enemy sight cone or
             //  Player out of enemy sight distance
-            if( !playerDetected_ )
-            {
-                PlayerNotInSight();
-            }
+            //if( !playerDetected_ )
+            //{
+            //    PlayerNotInSight();
+            //}
 
             switch( enemyState_ )
             {
@@ -499,9 +507,9 @@ public class EnemyController : MonoBehaviour
 
     // Go to the next point when patrolling
 	void GoToNextPoint()
-	{
+    {
         // Return if the path is not defined
-		if( path_.Length == 0 )
+        if( path_.Length == 0 )
 		{
 			return;
 		}
