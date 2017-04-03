@@ -75,7 +75,7 @@ public class EnemyController : MonoBehaviour
     // Enemy distrected speed
     const float distractedSpeed_ = 2.5f;
     // Enemy running speed
-    const float rushSpeed_ = 4.0f;
+    const float rushSpeed_ = 6.0f;
 
     // Enemy minimum distance to be able to move and shoot
     float minShootRange_;
@@ -127,19 +127,13 @@ public class EnemyController : MonoBehaviour
 
         // Get environment layer mask for shooting
         environmentMask_ = LayerMask.GetMask( "Environment" );
-
-        // TEST
-        sightDistance_ = 10.0f;
-        // TEST
         
         // Create shoot ray
         shootRay_ = new Ray();
         // Get minimum distance to be able to move and shoot
-        minShootRange_ = activeGun_.GetRange() / 6.0f - 8.0f; // 2
-        //nShootRange_ = activeGun_.GetRange() / 4.0f - 5.0f; // 10
+        minShootRange_ = activeGun_.GetRange() / 4.0f - 5.0f; // 10
         // Get maximum distance to be able to shoot
-        maxShootRange_ = activeGun_.GetRange() / 6.0f - 4.0f; // 6
-        //maxShootRange_ = activeGun_.GetRange() / 4.0f + 5.0f; // 20
+        maxShootRange_ = activeGun_.GetRange() / 4.0f + 5.0f; // 20
         // Clear distraction point
         distractionPoint_ = NO_DISTRACTION_SET;
 
@@ -193,9 +187,10 @@ public class EnemyController : MonoBehaviour
                 // Check if player is in enemy sight cone
                 if( angleToPlayer < fovYHalf_ )
                 {
+                    RaycastHit shootHit_;
                     // Check if player could be seen by enemy (no environment in way)
                     //if( !Physics.Raycast( enemyPosition_, playerDirection_, playerDistance_, environmentMask_ ) )
-                    if( !Physics.Raycast( enemyPosition_, playerDirection_, sightDistance_, environmentMask_ ) )
+                    if( Physics.Raycast( enemyPosition_, playerDirection_, out shootHit_, sightDistance_/*, environmentMask_*/ ) )
                     {
                         #region DEBUG
                         if( Debug.isDebugBuild )
@@ -204,23 +199,26 @@ public class EnemyController : MonoBehaviour
                         }
                         #endregion
 
-                        // Set player detected flag
-                        playerDetected_ = true;
-                        // Set following state
-                        enemyState_ = EnemyState.Following;
-
-                        distractionPoint_ = playerPosition_;
-
-                        // Check if Player is in shooting range of enemy
-                        if( playerDistance_ < maxShootRange_ )
+                        if( shootHit_.collider.tag == "Player" )
                         {
-                            Shoot();
+                            // Set player detected flag
+                            playerDetected_ = true;
+                            // Set following state
+                            enemyState_ = EnemyState.Following;
 
-                            // Check if Player is too close to enemy
-                            if( playerDistance_ < minShootRange_ )
+                            distractionPoint_ = playerPosition_;
+
+                            // Check if Player is in shooting range of enemy
+                            if( playerDistance_ < maxShootRange_ )
                             {
-                                // Disable enemy movement
-                                nav_.enabled = false;
+                                Shoot();
+
+                                // Check if Player is too close to enemy
+                                if( playerDistance_ < minShootRange_ )
+                                {
+                                    // Disable enemy movement
+                                    nav_.enabled = false;
+                                }
                             }
                         }
                     }
@@ -236,7 +234,8 @@ public class EnemyController : MonoBehaviour
                 PlayerNotInSight();
             }
 
-            //Debug.Log( enemyState_ );
+            Debug.Log( "Detected " + playerDetected_ );
+            Debug.Log( enemyState_ );
             switch( enemyState_ )
             {
                 case EnemyState.Patrolling:
@@ -248,7 +247,7 @@ public class EnemyController : MonoBehaviour
                     anim_.SetFloat( "Speed", walkSpeed_ );
 
                     // Check if the destination point has been almost reached
-                    if( nav_.remainingDistance < 1.5f )
+                    if( nav_.remainingDistance < 5.0f )
                     {
                         // Go to the next point
                         GoToNextPoint();
@@ -281,7 +280,7 @@ public class EnemyController : MonoBehaviour
                     }
 
                     // Check if the destination point has been almost reached
-                    if( nav_.remainingDistance < 1.5f )
+                    if( nav_.remainingDistance < 3.0f )
                     {
                         // Clear distraction point
                         distractionPoint_ = NO_DISTRACTION_SET;
@@ -399,8 +398,8 @@ public class EnemyController : MonoBehaviour
                         walkAudio_.maxDistance = 30;
                     }
                 }
-                // Play walk audio if it is not playing
-                if( !walkAudio_.isPlaying )
+                // Play walk audio if it is not playing and enemy is moving
+                if( !walkAudio_.isPlaying && nav_.enabled )
                 {
                     walkAudio_.Play();
                 }
@@ -581,4 +580,24 @@ public class EnemyController : MonoBehaviour
             nav_.SetDestination( path_[destPointId_] );
         }
 	}
+
+    // Set path waypoints
+    public void SetPath( Transform[] waypoints )
+    {
+        // Return on empty waypoint array
+        if( waypoints.Length == 0 )
+        {
+            return;
+        }
+
+        // Initialize path array
+        path_ = new Vector3[waypoints.Length];
+
+        int i = 0;
+        // Set waypoints
+        for( i = 0; i < waypoints.Length; i++ )
+        {
+            path_[i] = waypoints[i].position;
+        }
+    }
 }

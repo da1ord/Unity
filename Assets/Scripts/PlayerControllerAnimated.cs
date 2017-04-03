@@ -343,6 +343,11 @@ public class PlayerControllerAnimated : MonoBehaviour
             isGrounded_ = false;
 		}
 
+        if( Input.GetKeyDown( KeyCode.Space ) && menuController_.HasPlayerWon() )
+        {
+            menuController_.ResetScene();
+        }
+
 		// Jump (if on ground)
 		if( Input.GetKeyDown( KeyCode.Space ) && isGrounded_ )
 		{

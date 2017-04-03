@@ -24,7 +24,18 @@ public class MenuController :MonoBehaviour
     // Settings back button
     Button newGameButton_;
 
+    // Win screen image
+    Image winImage_;
+    // Win screen text
+    Text winText_;
+    // Restart text
+    Text restartText_;
+
+    // Flag indicating if the game has started
     bool gameStarted_ = false;
+
+    // Flag indicating if the player has won
+    bool playerWon_ = false;
 
     // Init function
     void Awake()
@@ -47,6 +58,13 @@ public class MenuController :MonoBehaviour
         // Get New game button component
         newGameButton_ = GameObject.Find( "NewGameButton" ).GetComponent<Button>();
 
+        // Get win screen image component
+        winImage_ = GameObject.Find( "WinImage" ).GetComponent<Image>();
+        // Get win screen text component
+        winText_ = GameObject.Find( "WinText" ).GetComponent<Text>();
+        // Get restart text component
+        restartText_ = GameObject.Find( "RestartText" ).GetComponent<Text>();
+
         // Get volume slider component
         volumeSlider_ = GameObject.Find( "VolumeSlider" ).GetComponent<Slider>();
         // Get mouse sensitivity slider component
@@ -59,6 +77,8 @@ public class MenuController :MonoBehaviour
     // Post init function
     void Start()
     {
+        // Pause audio listener
+        AudioListener.pause = true;
         // Hide settings menu
         settingsMenu_.SetActive( false );
         // Hide HUD
@@ -73,6 +93,9 @@ public class MenuController :MonoBehaviour
         {
             SceneManager.LoadScene( "Shooter" );
         }
+
+        // Unpause the audio listener in case it is still paused
+        AudioListener.pause = false;
 
         ExitMenu();
 
@@ -163,6 +186,30 @@ public class MenuController :MonoBehaviour
     public void HideMap()
     {
         mapCanvas_.enabled = false;
+    }
+
+    // Shows the win screen
+    public void ShowWinScreen()
+    {
+        // Stop the game
+        AudioListener.pause = true;
+        //Time.timeScale = 0;
+
+        // Show win image and win text
+        winImage_.color = new Color( 1.0f, 1.0f, 1.0f, 1.0f );
+        winText_.color = new Color( 0.0f, 0.0f, 0.0f, 1.0f );
+        
+        // Show "Press SPACE to restart" text
+        restartText_.color = new Color( 0.0f, 0.0f, 0.0f, 1.0f );
+
+        // Set player won flag
+        playerWon_ = true;
+    }
+
+    // Return player won state
+    public bool HasPlayerWon()
+    {
+        return playerWon_;
     }
 
     // Return game state

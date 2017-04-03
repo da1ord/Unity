@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.UI;
 
 public class EnemyHealth : MonoBehaviour
 {
@@ -31,6 +32,11 @@ public class EnemyHealth : MonoBehaviour
     // Enemy's speech audio source
     AudioSource speechAudio_;
 
+    MenuController menuController_;
+    EnemyManager enemyManager_;
+    Text enemyCountText_;
+    string enemyCountString_;
+
     // Init function
     void Awake()
     {
@@ -47,6 +53,13 @@ public class EnemyHealth : MonoBehaviour
         walkAudio_ = GetComponents<AudioSource>()[0];
         // Get speech audio source component
         speechAudio_ = GetComponents<AudioSource>()[1];
+
+        // Get menu controller script
+        menuController_ = GameObject.Find( "Menu" ).GetComponent<MenuController>();
+        // Get enemy manager script
+        enemyManager_ = GameObject.Find( "EnemyManager" ).GetComponent<EnemyManager>();
+        // Get enemy count text component
+        enemyCountText_ = GameObject.Find( "RemainingEnemiesText" ).GetComponent<Text>();
     }
 
     // Enemy hurt function
@@ -80,7 +93,6 @@ public class EnemyHealth : MonoBehaviour
         {
             Death();
         }
-
 	}
     
     // Enemy death function
@@ -114,7 +126,18 @@ public class EnemyHealth : MonoBehaviour
         // Spawn ammo clip
         Instantiate( clip_, clipSpawnPosition, rotation );
 
+        // Tell enemy manager that enemy was killed
+        enemyManager_.EnemyKilled();
+        // Update enemy count text
+        enemyCountText_.text = "Enemies remaining: " + enemyManager_.GetEnemyCount().ToString();
+
         // Destroy the enemy after 1s
-		Destroy( gameObject, 1.0f );
+        Destroy( gameObject, 1.0f );
+        
+        // Show win screen if enemy count is 0
+        if( enemyManager_.GetEnemyCount() == 0 )
+        {
+            menuController_.ShowWinScreen();
+        }
 	}
 }
